@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'DynamicPagerExample' target in the 'DynamicPagerExample' project
+//
+
+#ifdef __OBJC__
+  #import <Cocoa/Cocoa.h>
+#endif
