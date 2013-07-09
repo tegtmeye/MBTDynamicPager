@@ -8,100 +8,14 @@
 
 #import "BlockViewController.h"
 
-
-
-
-@interface TestView : NSView
-
-@property (nonatomic, strong) NSColor *color;
-@property (nonatomic, strong) NSTextField *labelField;
-
-@end
-
-@implementation TestView
-
-- (id)initWithFrame:(NSRect)frameRect andColor:(NSColor *)aColor andLabel:(NSString *)label
-{
-  self = [super initWithFrame:frameRect];
-  if(self) {
-    self.color = aColor;
-    
-    self.labelField = [[NSTextField alloc] initWithFrame:NSZeroRect];
-    [self.labelField setStringValue:label];
-    [self.labelField setDrawsBackground:NO];
-    [self.labelField setEditable:NO];
-    [self.labelField setSelectable:NO];
-    [self.labelField setBordered:NO];
-    [self.labelField setTextColor:[NSColor whiteColor]];
-    [self.labelField setFont:[NSFont boldSystemFontOfSize:36]];
-    
-    [self addSubview:self.labelField];
-    
-    [self.labelField setTranslatesAutoresizingMaskIntoConstraints:NO];
-    NSDictionary *viewsDictionary = @{@"view" : self.labelField};
-    [self addConstraints:[NSLayoutConstraint
-                          constraintsWithVisualFormat:@"[view(>=20)]"
-                          options:0
-                          metrics:nil
-                          views:viewsDictionary]];
-    
-    [self addConstraint:[NSLayoutConstraint
-                         constraintWithItem:self.labelField
-                         attribute:NSLayoutAttributeCenterX
-                         relatedBy:NSLayoutRelationEqual
-                         toItem:self
-                         attribute:NSLayoutAttributeCenterX
-                         multiplier:1.0f
-                         constant:0.0f]];
-    
-    [self addConstraint:[NSLayoutConstraint
-                         constraintWithItem:self.labelField
-                         attribute:NSLayoutAttributeCenterY
-                         relatedBy:NSLayoutRelationEqual
-                         toItem:self
-                         attribute:NSLayoutAttributeCenterY
-                         multiplier:1.0f
-                         constant:0.0f]];
-  }
-  
-  return self;
-}
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-//   NSLog(@"MyView Drawing %@ with at %@ in %@",self.label,NSStringFromRect(self.frame),NSStringFromRect([[self superview] frame]));
-  
-//  NSLog(@"TextView %@",NSStringFromRect([self.labelField frame]));
-  
-  [self.color setFill];
-  
-  NSRectFill(self.bounds);
-  
-  [[NSColor redColor] setStroke];
-  
-  NSFrameRect(self.bounds);
-  
-}
-
-- (void)setColor:(NSColor *)color
-{
-  _color = color;
-  
-  [self setNeedsDisplay:YES];
-}
-
-@end
-
-
-
-
-
-
-
+#import "MBTSimpleView.h"
 
 @interface BlockViewController ()
 
-- (TestView *)testView;
+@property (nonatomic, weak) IBOutlet MBTSimpleView *backgroundView;
+
+- (NSString *)nibNameForViewChoice;
+- (void)replaceViewWithNib:(NSString *)nibName;
 
 @end
 
@@ -148,61 +62,77 @@
 }
 
 
-- (id)initWithLabel:(NSString *)label
+- (void)loadView
 {
-    self = [super initWithNibName:nil bundle:nil];
-    if (self) {
-        // Initialization code here.
-      
-      self.view = [[TestView alloc] initWithFrame:NSZeroRect
-                                         andColor:[BlockViewController colorCycler]
-                                         andLabel:label];
-      [self.view setTranslatesAutoresizingMaskIntoConstraints:NO];
+  [super loadView];
 
-    }
-    
-    return self;
-}
+  self.label = [BlockViewController labelCounter];
+  self.backgroundColor = [BlockViewController colorCycler];
 
-- (id)init
-{
-  return [self initWithLabel:[BlockViewController labelCounter]];
-}
+  // Use normal view replacement machinary to set the initial view
+  [self replaceViewWithNib:[self nibNameForViewChoice]];
 
-- (NSString *)label
-{
-  return [self.testView.labelField stringValue];
-}
-
-- (void)setLabel:(NSString *)label
-{
-  [self.testView.labelField setStringValue:label];
-}
-
-- (NSColor *)backgroundColor
-{
-  return self.testView.color;
-}
-
-- (void)setBackgroundColor:(NSColor *)backgroundColor
-{
-  self.testView.color = backgroundColor;
+  [self.backgroundView bind:@"backgroundColor" toObject:self withKeyPath:@"backgroundColor" options:0];
 }
 
 - (void)setIsolatedBlock:(BOOL)isolatedBlock
 {
-  NSLog(@"Called setIsolated %i",isolatedBlock);
-  
   _isolatedBlock = isolatedBlock;
 }
 
-#pragma mark - private methods
-
-- (TestView *)testView
+- (NSString *)nibNameForViewChoice
 {
-  return (TestView *)self.view;
+  static NSString *nibNames[] = {
+    @"MBTSimpleSpringsAndStruts",
+    @"MBTSimpleSpringsAndStrutsResizable",
+    @"MBTSimpleAutoLayout",
+    @"MBTSimpleAutoLayoutResizable",
+    @"MBTComplexSpringsAndStruts",
+    @"MBTComplexSpringsAndStrutsResizable",
+    @"MBTComplexAutoLayout",
+    @"MBTComplexAutoLayoutResizable",
+  };
+
+  int index = (self.blockStyle << 2)|(self.viewUsesAutoLayout << 1)|self.viewIsResizable;
+  assert(index < 8);
+  
+  return nibNames[index];
 }
 
+- (void)setBlockStyle:(enum BlockControllerStyle)blockStyle
+{
+  _blockStyle = blockStyle;
+
+  [self replaceViewWithNib:[self nibNameForViewChoice]];
+}
+
+- (void)setViewUsesAutoLayout:(BOOL)viewUsesAutoLayout
+{
+  _viewUsesAutoLayout = viewUsesAutoLayout;
+  
+  [self replaceViewWithNib:[self nibNameForViewChoice]];
+}
+
+- (void)setViewIsResizable:(BOOL)viewIsResizable
+{
+  _viewIsResizable = viewIsResizable;
+
+  [self replaceViewWithNib:[self nibNameForViewChoice]];
+}
+
+
+- (void)replaceViewWithNib:(NSString *)nibName
+{
+  [self.backgroundView unbind:@"backgroundColor"];
+  
+  // load new nib
+  if(![NSBundle loadNibNamed:nibName owner:self]) {
+    NSLog(@"ERROR! Could not load nib file: %@",nibName);
+    assert(false);
+  }
+  
+  [self.backgroundView bind:@"backgroundColor" toObject:self withKeyPath:@"backgroundColor" options:0];
+}
 
 
 @end

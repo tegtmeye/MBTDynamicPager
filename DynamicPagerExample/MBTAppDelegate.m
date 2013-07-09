@@ -30,7 +30,7 @@
 
 - (void)updatePageNavigation
 {
-  NSLog(@"number of pages %li",(long)self.dynamicPager.numberOfPages);
+//  NSLog(@"number of pages %li",(long)self.dynamicPager.numberOfPages);
 
   NSUInteger currentPage = self.dynamicPager.currentPage;
   self.canPageDown = (currentPage > 0);
@@ -64,7 +64,7 @@
     [self updatePageNavigation];
   }
   else if(object == self.dynamicPager && [keyPath isEqualToString:@"numberOfPages"]) {
-    NSLog(@"Number of pages changed");
+//    NSLog(@"Number of pages changed");
     [self updateSegmentCount];
     [self updatePageNavigation];
   }
@@ -98,6 +98,9 @@
   
 }
 
+- (IBAction)updateView:(id)sender {
+}
+
 - (IBAction)previousPage:(id)sender
 {
   if(self.dynamicPager.currentPage > 0)
@@ -119,14 +122,14 @@
 
 - (BOOL)blockShouldBeIsolated:(NSViewController *)controller
 {
-  NSLog(@"Called blockShouldBeIsolated");
+//  NSLog(@"Called blockShouldBeIsolated");
 
   BOOL result = [self.dynamicPager blocksDefaultToIsolated];
   
   if(!self.ignorePerBlockIsolation && [controller respondsToSelector:@selector(isolatedBlock)])
     result = (BOOL)[controller performSelector:@selector(isolatedBlock)];
   
-  NSLog(@"Called blockShouldBeIsolated with result: %i",result);
+//  NSLog(@"Called blockShouldBeIsolated with result: %i",result);
   
   return result;
 }

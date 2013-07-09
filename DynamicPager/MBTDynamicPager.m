@@ -49,6 +49,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 @property (nonatomic, strong) id contentArrayObservableObject;
 @property (nonatomic, strong) NSString *contentArrayBindingKeyPath;
 @property (nonatomic, strong) NSSet *viewBindingObservers;
+@property (nonatomic, strong) NSMapTable *blockViewMap;
 
 @property (nonatomic, strong) NSTabView *tabView;
 @property (nonatomic, strong) NSMutableArray *pages;
@@ -113,7 +114,6 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 - (void)bind:(NSString *)binding toObject:(id)observable withKeyPath:(NSString *)keyPath options:(NSDictionary *)options
 {
   if([binding isEqualToString:NSContentArrayBinding]) {
-    NSLog(@"Start Binding!");
     [self unbind:NSContentArrayBinding];
     
     self.contentArrayObservableObject = observable;
@@ -149,13 +149,21 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-  NSLog(@"Got observation for %@",keyPath);
   if(object == self.contentArrayObservableObject && [keyPath isEqualToString:self.contentArrayBindingKeyPath]) {
     [self updateViewObservations];
 
     [self noteLayoutChanged];
   }
   else if([self.viewBindingObservers containsObject:object] && [keyPath isEqualToString:@"view"]) {
+    NSView *view = [self.blockViewMap objectForKey:object];
+    
+    if((id)view != [NSNull null]) {
+      [view removeFromSuperview];
+    }
+
+    view = [object valueForKeyPath:@"view"];
+    [self.blockViewMap setObject:(view?view:[NSNull null]) forKey:object];
+    
     [self noteLayoutChanged];
   }
 }
@@ -307,9 +315,21 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   [[deletedBlocks allObjects] removeObserver:self fromObjectsAtIndexes:indices forKeyPath:@"view"];
 
   indices = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [addedBlocks count])];
-  [[addedBlocks allObjects] addObserver:self toObjectsAtIndexes:indices forKeyPath:@"view" options:0 context:0];
+  [[addedBlocks allObjects] addObserver:self
+                     toObjectsAtIndexes:indices
+                             forKeyPath:@"view"
+                                options:0
+                                context:0];
 
   self.viewBindingObservers = currentBlockSet;
+  
+  // build a maptable from the blockControllers to their views
+  // this way when we get a view changed observation, we know which was the old
+  // view to remove from the tabviewitem
+  self.blockViewMap = [NSMapTable mapTableWithWeakToWeakObjects];
+  for(NSViewController *blockController in self.viewBindingObservers) {
+    [self.blockViewMap setObject:blockController.view forKey:blockController];
+  }
 }
 
 - (void)updateBlockContents
@@ -372,19 +392,17 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     NSSize contentSize = [block fittingSize];
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
-    NSLog(@"DELEGATE: %@",self.delegate);
+
     if(self.delegate && [self.delegate respondsToSelector:@selector(blockShouldBeIsolated:)])
       isolatedBlock = [self.delegate blockShouldBeIsolated:blockController];
     
-    NSLog(@"Block should be isolated: %i",isolatedBlock);
-    
     CGFloat blockWidth = (contentSize.width > 0 ? contentSize.width : self.defaultBlockWidth);
     
-    NSLog(@"Content size: %@, default block width %f",NSStringFromSize(contentSize),self.defaultBlockWidth);
-    NSLog(@"AvailableWidth %f, needed %f",availableWidth,blockWidth + self.interblockPadding);
+//    NSLog(@"Content size: %@, default block width %f",NSStringFromSize(contentSize),self.defaultBlockWidth);
+//    NSLog(@"AvailableWidth %f, needed %f",availableWidth,blockWidth + self.interblockPadding);
 
     if(isolatedBlock || previousIsolated ||  availableWidth < (blockWidth + self.interblockPadding)) {
-      NSLog(@"\tMaking a new page with availableWidth %f: ",NSWidth(self.frame));
+//      NSLog(@"\tMaking a new page with availableWidth %f: ",NSWidth(self.frame));
       currentpage = [NSMutableDictionary dictionary];
       [self.pages addObject:currentpage];
       fittingWidth = blockWidth;
@@ -405,13 +423,13 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
       fittingWidth += (blockWidth + self.interblockPadding);
       availableWidth -= (blockWidth + self.interblockPadding);
       [currentpage setObject:[NSNumber numberWithFloat:fittingWidth] forKey:kFittingWidthKey];
-      NSLog(@"\tAdded to existing page, availablewidth is now: %f",availableWidth);
+//      NSLog(@"\tAdded to existing page, availablewidth is now: %f",availableWidth);
     }
     
     previousIsolated = isolatedBlock;
   }
   
-  NSLog(@"Pages %@",self.pages);
+//  NSLog(@"Pages %@",self.pages);
   
   // actually build the tabview
   NSMutableArray *tabViewItems = [NSMutableArray arrayWithArray:[self.tabView tabViewItems]];

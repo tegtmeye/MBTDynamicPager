@@ -11,6 +11,15 @@
 		EC1CF250175D61C600CFAAB5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EC1CF24E175D61C600CFAAB5 /* InfoPlist.strings */; };
 		EC1CF25C175D63CE00CFAAB5 /* MBTDynamicPager.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1CF25A175D63CE00CFAAB5 /* MBTDynamicPager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC1CF25D175D63CE00CFAAB5 /* MBTDynamicPager.m in Sources */ = {isa = PBXBuildFile; fileRef = EC1CF25B175D63CE00CFAAB5 /* MBTDynamicPager.m */; };
+		EC78F772178C061F006C13A1 /* MBTComplexAutoLayout.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76A178C061F006C13A1 /* MBTComplexAutoLayout.xib */; };
+		EC78F773178C061F006C13A1 /* MBTComplexAutoLayoutResizable.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76B178C061F006C13A1 /* MBTComplexAutoLayoutResizable.xib */; };
+		EC78F774178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76C178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib */; };
+		EC78F775178C061F006C13A1 /* MBTComplexSpringsAndStrutsResizable.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76D178C061F006C13A1 /* MBTComplexSpringsAndStrutsResizable.xib */; };
+		EC78F776178C061F006C13A1 /* MBTSimpleAutoLayout.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76E178C061F006C13A1 /* MBTSimpleAutoLayout.xib */; };
+		EC78F777178C061F006C13A1 /* MBTSimpleAutoLayoutResizable.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F76F178C061F006C13A1 /* MBTSimpleAutoLayoutResizable.xib */; };
+		EC78F778178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F770178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib */; };
+		EC78F779178C061F006C13A1 /* MBTSimpleSpringsAndStrutsResizable.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC78F771178C061F006C13A1 /* MBTSimpleSpringsAndStrutsResizable.xib */; };
+		EC9618D21787A87F0003879C /* MBTSimpleView.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9618D11787A87F0003879C /* MBTSimpleView.m */; };
 		ECF469B41775CF4B00669C96 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC1CF245175D61C600CFAAB5 /* Cocoa.framework */; };
 		ECF469BA1775CF4B00669C96 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = ECF469B81775CF4B00669C96 /* InfoPlist.strings */; };
 		ECF469BC1775CF4B00669C96 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECF469BB1775CF4B00669C96 /* main.m */; };
@@ -46,6 +55,16 @@
 		EC1CF251175D61C600CFAAB5 /* MBTDynamicPager-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MBTDynamicPager-Prefix.pch"; sourceTree = "<group>"; };
 		EC1CF25A175D63CE00CFAAB5 /* MBTDynamicPager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTDynamicPager.h; sourceTree = "<group>"; };
 		EC1CF25B175D63CE00CFAAB5 /* MBTDynamicPager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBTDynamicPager.m; sourceTree = "<group>"; };
+		EC78F76A178C061F006C13A1 /* MBTComplexAutoLayout.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTComplexAutoLayout.xib; sourceTree = "<group>"; };
+		EC78F76B178C061F006C13A1 /* MBTComplexAutoLayoutResizable.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTComplexAutoLayoutResizable.xib; sourceTree = "<group>"; };
+		EC78F76C178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTComplexSpringsAndStruts.xib; sourceTree = "<group>"; };
+		EC78F76D178C061F006C13A1 /* MBTComplexSpringsAndStrutsResizable.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTComplexSpringsAndStrutsResizable.xib; sourceTree = "<group>"; };
+		EC78F76E178C061F006C13A1 /* MBTSimpleAutoLayout.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTSimpleAutoLayout.xib; sourceTree = "<group>"; };
+		EC78F76F178C061F006C13A1 /* MBTSimpleAutoLayoutResizable.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTSimpleAutoLayoutResizable.xib; sourceTree = "<group>"; };
+		EC78F770178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTSimpleSpringsAndStruts.xib; sourceTree = "<group>"; };
+		EC78F771178C061F006C13A1 /* MBTSimpleSpringsAndStrutsResizable.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTSimpleSpringsAndStrutsResizable.xib; sourceTree = "<group>"; };
+		EC9618D01787A87F0003879C /* MBTSimpleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBTSimpleView.h; sourceTree = "<group>"; };
+		EC9618D11787A87F0003879C /* MBTSimpleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBTSimpleView.m; sourceTree = "<group>"; };
 		ECF469B31775CF4B00669C96 /* DynamicPagerExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DynamicPagerExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECF469B71775CF4B00669C96 /* DynamicPagerExample-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "DynamicPagerExample-Info.plist"; sourceTree = "<group>"; };
 		ECF469B91775CF4B00669C96 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -138,9 +157,27 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		EC9618CF1787A8510003879C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				EC9618D01787A87F0003879C /* MBTSimpleView.h */,
+				EC9618D11787A87F0003879C /* MBTSimpleView.m */,
+				EC78F76C178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib */,
+				EC78F76D178C061F006C13A1 /* MBTComplexSpringsAndStrutsResizable.xib */,
+				EC78F76A178C061F006C13A1 /* MBTComplexAutoLayout.xib */,
+				EC78F76B178C061F006C13A1 /* MBTComplexAutoLayoutResizable.xib */,
+				EC78F770178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib */,
+				EC78F771178C061F006C13A1 /* MBTSimpleSpringsAndStrutsResizable.xib */,
+				EC78F76E178C061F006C13A1 /* MBTSimpleAutoLayout.xib */,
+				EC78F76F178C061F006C13A1 /* MBTSimpleAutoLayoutResizable.xib */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
 		ECF469B51775CF4B00669C96 /* DynamicPagerExample */ = {
 			isa = PBXGroup;
 			children = (
+				EC9618CF1787A8510003879C /* Views */,
 				ECF469C11775CF4B00669C96 /* MBTAppDelegate.h */,
 				ECF469C21775CF4B00669C96 /* MBTAppDelegate.m */,
 				ECF469C41775CF4C00669C96 /* MainMenu.xib */,
@@ -257,6 +294,14 @@
 				ECF469BA1775CF4B00669C96 /* InfoPlist.strings in Resources */,
 				ECF469C01775CF4B00669C96 /* Credits.rtf in Resources */,
 				ECF469C61775CF4C00669C96 /* MainMenu.xib in Resources */,
+				EC78F772178C061F006C13A1 /* MBTComplexAutoLayout.xib in Resources */,
+				EC78F773178C061F006C13A1 /* MBTComplexAutoLayoutResizable.xib in Resources */,
+				EC78F774178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib in Resources */,
+				EC78F775178C061F006C13A1 /* MBTComplexSpringsAndStrutsResizable.xib in Resources */,
+				EC78F776178C061F006C13A1 /* MBTSimpleAutoLayout.xib in Resources */,
+				EC78F777178C061F006C13A1 /* MBTSimpleAutoLayoutResizable.xib in Resources */,
+				EC78F778178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib in Resources */,
+				EC78F779178C061F006C13A1 /* MBTSimpleSpringsAndStrutsResizable.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,6 +323,7 @@
 				ECF469BC1775CF4B00669C96 /* main.m in Sources */,
 				ECF469C31775CF4B00669C96 /* MBTAppDelegate.m in Sources */,
 				ECF469CF17794AE700669C96 /* BlockViewController.m in Sources */,
+				EC9618D21787A87F0003879C /* MBTSimpleView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,6 +506,7 @@
 				ECF469C91775CF4C00669C96 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
