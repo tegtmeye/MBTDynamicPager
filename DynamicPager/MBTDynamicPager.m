@@ -68,14 +68,14 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
 @implementation MBTDynamicPager
 
-+ (BOOL)requiresConstraintBasedLayout
-{
-  return YES;
-}
+//+ (BOOL)requiresConstraintBasedLayout
+//{
+//  return YES;
+//}
 
 - (id)initWithFrame:(NSRect)frame
 {
-  NSLog(@"Creating new pager!!!!!!!!");
+//  NSLog(@"Creating new pager!!!!!!!!");
   self = [super initWithFrame:frame];
   if (self) {
     self.interblockPadding = 8.0f;
@@ -334,39 +334,45 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
 - (void)updateBlockContents
 {
+//  NSLog(@"Updating Block Contents!");
+
   NSArray *blockArray = [self currentBlockArray];
 
   // we setTranslatesAutoresizingMaskIntoConstraints to NO for each block
   // and manually manage the translation
   for(NSViewController *blockController in blockArray) {
     NSView *block = blockController.view;
-    if([block translatesAutoresizingMaskIntoConstraints]) {
-      [block removeConstraints:[block constraints]];
-      [block setTranslatesAutoresizingMaskIntoConstraints:NO];
-      
-      NSUInteger autoresizingMask = [block autoresizingMask];
-      if(!(autoresizingMask&NSViewWidthSizable)) {
-        [block addConstraint:[NSLayoutConstraint
-                              constraintWithItem:block
-                              attribute:NSLayoutAttributeWidth
-                              relatedBy:NSLayoutRelationEqual
-                              toItem:nil
-                              attribute:NSLayoutAttributeNotAnAttribute
-                              multiplier:1.0f
-                              constant:NSWidth(block.bounds)]];
-      }
-      
-      if(!(autoresizingMask&NSViewHeightSizable)) {
-        [block addConstraint:[NSLayoutConstraint
-                              constraintWithItem:block
-                              attribute:NSLayoutAttributeHeight
-                              relatedBy:NSLayoutRelationEqual
-                              toItem:nil
-                              attribute:NSLayoutAttributeNotAnAttribute
-                              multiplier:1.0f
-                              constant:NSHeight(block.bounds)]];
-      }
-    }
+    
+    [block setTranslatesAutoresizingMaskIntoConstraints:NO];
+//    NSLog(@"Block %@ has constraints %@",block,[block constraints]);
+    
+//    if([block translatesAutoresizingMaskIntoConstraints]) {
+//      [block removeConstraints:[block constraints]];
+//      [block setTranslatesAutoresizingMaskIntoConstraints:NO];
+//      
+//      NSUInteger autoresizingMask = [block autoresizingMask];
+//      if(!(autoresizingMask&NSViewWidthSizable)) {
+//        [block addConstraint:[NSLayoutConstraint
+//                              constraintWithItem:block
+//                              attribute:NSLayoutAttributeWidth
+//                              relatedBy:NSLayoutRelationEqual
+//                              toItem:nil
+//                              attribute:NSLayoutAttributeNotAnAttribute
+//                              multiplier:1.0f
+//                              constant:NSWidth(block.bounds)]];
+//      }
+//      
+//      if(!(autoresizingMask&NSViewHeightSizable)) {
+//        [block addConstraint:[NSLayoutConstraint
+//                              constraintWithItem:block
+//                              attribute:NSLayoutAttributeHeight
+//                              relatedBy:NSLayoutRelationEqual
+//                              toItem:nil
+//                              attribute:NSLayoutAttributeNotAnAttribute
+//                              multiplier:1.0f
+//                              constant:NSHeight(block.bounds)]];
+//      }
+//    }
   }
 }
 
@@ -374,7 +380,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
 - (void)configureBlocksInTabview
 {
-  NSLog(@"\n\nRETILING!");
+//  NSLog(@"RETILING!");
   BOOL flexibleContent = NO;
   BOOL previousIsolated = NO;
   CGFloat fittingWidth = 0.0;
@@ -390,6 +396,10 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     NSView *block = [blockController view];
     [block layoutSubtreeIfNeeded];
     NSSize contentSize = [block fittingSize];
+    
+//    NSLog(@"Got fittingWidth %@",NSStringFromSize(contentSize));
+//    NSLog(@"contentHuggingPriorityForOrientation %f",[block contentHuggingPriorityForOrientation:NSLayoutConstraintOrientationHorizontal]);
+//    NSLog(@"contentCompressionResistancePriorityForOrientation %f",[block contentCompressionResistancePriorityForOrientation:NSLayoutConstraintOrientationHorizontal]);
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
 
@@ -538,6 +548,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     }
     
 //    NSLog(@"Page constraints: %@",[[tabViewItem view] constraints]);
+    [[[tabViewItem view] window] visualizeConstraints:[[tabViewItem view] constraints]];
   }
 
   // remove any remaining tabs
@@ -586,7 +597,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   NSView *itemView = [currentTabViewItem view];
 
   for(NSView *block in [itemView subviews]) {
-    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
+//    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
   }
   
 }
