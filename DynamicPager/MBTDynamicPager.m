@@ -326,7 +326,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   // build a maptable from the blockControllers to their views
   // this way when we get a view changed observation, we know which was the old
   // view to remove from the tabviewitem
-  self.blockViewMap = [NSMapTable mapTableWithWeakToWeakObjects];
+  self.blockViewMap = [NSMapTable weakToWeakObjectsMapTable];
   for(NSViewController *blockController in self.viewBindingObservers) {
     [self.blockViewMap setObject:blockController.view forKey:blockController];
   }
@@ -548,7 +548,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     }
     
 //    NSLog(@"Page constraints: %@",[[tabViewItem view] constraints]);
-    [[[tabViewItem view] window] visualizeConstraints:[[tabViewItem view] constraints]];
+//    [[[tabViewItem view] window] visualizeConstraints:[[tabViewItem view] constraints]];
   }
 
   // remove any remaining tabs
@@ -597,7 +597,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   NSView *itemView = [currentTabViewItem view];
 
   for(NSView *block in [itemView subviews]) {
-//    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
+    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
   }
   
 }
