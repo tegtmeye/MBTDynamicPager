@@ -27,8 +27,9 @@
 
 /**
  *  MBTDynamicPager is binding aware for the 'contentArray'. For example, to
- *  bind to an NSArrayController, bind the MBTDynamicPager 'NSContentArray'
- *  binding name to the 'arrangedObjects' keypath of the NSArrayController.
+ *  bind to an NSArrayController, bind the MBTDynamicPager
+ *  'NSContentArrayBinding' binding name to the 'arrangedObjects' keypath of
+ *  the NSArrayController.
  *
  *  eg:
  *    [dynamicPager bind:NSContentArrayBinding

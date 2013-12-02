@@ -8,10 +8,26 @@
 
 #import "MBTDynamicPager.h"
 
+#ifdef DEBUG
+#define MBTDYNAMICPAGER_DEBUG 1
+#else
+#define MBTDYNAMICPAGER_DEBUG 0
+#endif
 
 static const CGFloat kBlockPadY=0.0f;
 
 static const NSString *kFittingWidthKey = @"fittingWidth";
+
+static BOOL userRequestedLog(void)
+{
+  return [[NSUserDefaults standardUserDefaults] boolForKey:@"MBTDynamicPagerLogging"];
+}
+
+static BOOL userRequestedVisualAids(void)
+{
+  return [[NSUserDefaults standardUserDefaults] boolForKey:@"MBTDynamicPagerVisualAids"];
+}
+
 
 
 @interface MyContainerView : NSView
@@ -94,13 +110,13 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
     NSDictionary *viewsDictionary = @{@"view" : self.tabView};
     [self addConstraints:[NSLayoutConstraint
-                          constraintsWithVisualFormat:@"|-[view]-|"
+                          constraintsWithVisualFormat:@"|[view]|"
                           options:0
                           metrics:nil
                           views:viewsDictionary]];
 
     [self addConstraints:[NSLayoutConstraint
-                          constraintsWithVisualFormat:@"V:|-[view]-|"
+                          constraintsWithVisualFormat:@"V:|[view]|"
                           options:0
                           metrics:nil
                           views:viewsDictionary]];
@@ -135,7 +151,9 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 - (void)unbind:(NSString *)binding
 {
   if([binding isEqualToString:NSContentArrayBinding]) {
-    [self.contentArrayObservableObject removeObserver:self];
+    if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath) {
+      [self.contentArrayObservableObject removeObserver:self forKeyPath:self.contentArrayBindingKeyPath];
+    }
     
     self.contentArrayObservableObject = nil;
     self.contentArrayBindingKeyPath = nil;
@@ -214,7 +232,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   }
 }
 
-
+#if 0
 - (void)drawRect:(NSRect)dirtyRect
 {
 //  NSLog(@"MBTDynamicPager Drawing %@ in %@",NSStringFromRect(self.frame),NSStringFromRect([[self superview] frame]));
@@ -223,6 +241,7 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
   
   NSRectFill(self.bounds);
 }
+#endif
 
 - (void)setFrame:(NSRect)frameRect
 {
@@ -380,7 +399,9 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
 
 - (void)configureBlocksInTabview
 {
-//  NSLog(@"RETILING!");
+  if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
+    NSLog(@"MBTDynamicPager Retiling!");
+
   BOOL flexibleContent = NO;
   BOOL previousIsolated = NO;
   CGFloat fittingWidth = 0.0;
@@ -397,9 +418,9 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     [block layoutSubtreeIfNeeded];
     NSSize contentSize = [block fittingSize];
     
-//    NSLog(@"Got fittingWidth %@",NSStringFromSize(contentSize));
-//    NSLog(@"contentHuggingPriorityForOrientation %f",[block contentHuggingPriorityForOrientation:NSLayoutConstraintOrientationHorizontal]);
-//    NSLog(@"contentCompressionResistancePriorityForOrientation %f",[block contentCompressionResistancePriorityForOrientation:NSLayoutConstraintOrientationHorizontal]);
+    if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
+      NSLog(@"MBTDynamicPager got fittingWidth %@ for block: %@",
+            NSStringFromSize(contentSize),blockController);
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
 
@@ -408,11 +429,17 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     
     CGFloat blockWidth = (contentSize.width > 0 ? contentSize.width : self.defaultBlockWidth);
     
-//    NSLog(@"Content size: %@, default block width %f",NSStringFromSize(contentSize),self.defaultBlockWidth);
-//    NSLog(@"AvailableWidth %f, needed %f",availableWidth,blockWidth + self.interblockPadding);
+    if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
+      NSLog(@"MBTDynamicPager: Block content size: %@, default block width %f",NSStringFromSize(contentSize),self.defaultBlockWidth);
+      NSLog(@"MBTDynamicPager: Current page availableWidth %f, needed %f",availableWidth,blockWidth + self.interblockPadding);
+    }
 
-    if(isolatedBlock || previousIsolated ||  availableWidth < (blockWidth + self.interblockPadding)) {
-//      NSLog(@"\tMaking a new page with availableWidth %f: ",NSWidth(self.frame));
+    if(isolatedBlock || previousIsolated ||
+      availableWidth < (blockWidth + self.interblockPadding))
+    {
+      if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
+        NSLog(@"\tMBTDynamicPager: Making a new page with availableWidth %f: ",NSWidth(self.frame));
+
       currentpage = [NSMutableDictionary dictionary];
       [self.pages addObject:currentpage];
       fittingWidth = blockWidth;
@@ -433,7 +460,9 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
       fittingWidth += (blockWidth + self.interblockPadding);
       availableWidth -= (blockWidth + self.interblockPadding);
       [currentpage setObject:[NSNumber numberWithFloat:fittingWidth] forKey:kFittingWidthKey];
-//      NSLog(@"\tAdded to existing page, availablewidth is now: %f",availableWidth);
+
+      if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
+        NSLog(@"\tMBTDynamicPager: Added to existing page, availablewidth is now: %f",availableWidth);
     }
     
     previousIsolated = isolatedBlock;
@@ -454,12 +483,14 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
     else {
       tabViewItem = [[NSTabViewItem alloc] initWithIdentifier:nil];
       // size wil get set by constraints
+#if 0
       NSView *containerView = [[MyContainerView alloc] initWithFrame:NSZeroRect];
       
       [tabViewItem setView:containerView];
       containerView = [tabViewItem view];
 
       [containerView setAutoresizingMask:(NSViewWidthSizable|NSViewHeightSizable)];
+#endif
       [self.tabView addTabViewItem:tabViewItem];
     }
 
@@ -527,8 +558,8 @@ static const NSString *kFittingWidthKey = @"fittingWidth";
                                              attribute:NSLayoutAttributeWidth
                                              multiplier:1.0f
                                              constant:0.0f]];
-          }
-        previousEqualBlock = block;
+          previousEqualBlock = block;
+        }
       }
       
       previousBlock = block;
