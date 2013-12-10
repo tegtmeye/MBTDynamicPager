@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4510" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4510"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="BlockViewController">
@@ -44,6 +44,11 @@
                 <constraint firstItem="2" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="18" id="14"/>
                 <constraint firstAttribute="centerX" secondItem="6" secondAttribute="centerX" id="15"/>
                 <constraint firstAttribute="centerY" secondItem="6" secondAttribute="centerY" id="16"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="2" secondAttribute="trailing" constant="20" symbolic="YES" id="4jQ-JA-Bxd"/>
+                <constraint firstItem="6" firstAttribute="top" relation="greaterThanOrEqual" secondItem="1" secondAttribute="top" constant="20" symbolic="YES" id="83f-yV-liX"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="6" secondAttribute="trailing" constant="20" symbolic="YES" id="NQw-Vu-WCB"/>
+                <constraint firstItem="6" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="1" secondAttribute="leading" constant="20" symbolic="YES" id="rf7-V6-VYd"/>
+                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="6" secondAttribute="bottom" constant="20" symbolic="YES" id="um5-f1-KCY"/>
             </constraints>
         </customView>
     </objects>

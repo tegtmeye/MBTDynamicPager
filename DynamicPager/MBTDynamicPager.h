@@ -13,6 +13,22 @@
 @optional
 
 /**
+ *  Return the desired width for the given block. This delegate method is
+ *  only called if the width field of '[[blockController view] fittingSize]'
+ *  returns zero. If this method also returns zero or is not implemented, then
+ *  MBTDynamicPager's 'defaultBlockWidth' is used.
+ */
+- (CGFloat)widthForUnconstrainedBlock:(NSViewController *)blockController;
+
+/**
+ *  Return the desired height for the given block. This delegate method is
+ *  only called if the height field of '[[blockController view] fittingSize]'
+ *  returns zero. If this method also returns zero or is not implemented, then
+ *  MBTDynamicPager's 'defaultBlockHeight' is used.
+ */
+- (CGFloat)heightForUnconstrainedBlock:(NSViewController *)blockController;
+
+/**
  *  Return YES if the block should be isolated on its own page. Only called
  *  once per layout
  */
@@ -68,15 +84,28 @@
 @property (nonatomic, assign) CGFloat interblockPadding;
 
 /**
- *  The width that will be assigned to a block if it does not have a natural
- *  width.
+ *  The width that will be assigned to a block if it does not have a fitting
+ *  width and one cannot be determined from the delegate.
  *
  *  The block layout system looks at each block's fittingSize property to
  *  determine how many blocks should appear on a single page. If fittingSize
- *  has a zero parameter (not uncommon, for example a simple containerview),
- *  then
+ *  has a zero parameter, the delegate does not implement or returns a zero
+ *  value from widthForUnconstrainedBlock:blockController, or there is no
+ *  delegate, then this value is used. The default is 100.
  */
 @property (nonatomic, assign) CGFloat defaultBlockWidth;
+
+/**
+ *  The height that will be assigned to a block if it does not have a fitting
+ *  height and one cannot be determined from the delegate.
+ *
+ *  The block layout system looks at each block's fittingSize property to
+ *  determine how many blocks should appear on a single page. If fittingSize
+ *  has a zero parameter, the delegate does not implement or returns a zero
+ *  value from heightForUnconstrainedBlock:blockController, or there is no
+ *  delegate, then this value is used. The default is 100.
+ */
+@property (nonatomic, assign) CGFloat defaultBlockHeight;
 
 /**
  *  If set, each block will appear on its own page. If a delegate is set and
@@ -88,7 +117,7 @@
 
 #pragma mark - auto layout overloads
 
-@property (nonatomic, assign, readonly) NSSize intrinsicContentSize;
+//@property (nonatomic, assign, readonly) NSSize intrinsicContentSize;
 
 
 #pragma mark - pager methods

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4510" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment defaultVersion="1080" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4510"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -650,12 +650,8 @@
         <customObject id="494" customClass="MBTAppDelegate">
             <connections>
                 <outlet property="drawer" destination="585" id="915"/>
-                <outlet property="drawerView" destination="584" id="618"/>
                 <outlet property="dynamicPager" destination="589" id="609"/>
-                <outlet property="resizableCheckBox" destination="1175" id="1233"/>
                 <outlet property="segmentPageControl" destination="832" id="843"/>
-                <outlet property="simpleComplexChooser" destination="975" id="1231"/>
-                <outlet property="springsAndStrutsAutoLayoutChooser" destination="1112" id="1232"/>
                 <outlet property="viewArrayController" destination="655" id="656"/>
                 <outlet property="window" destination="583" id="608"/>
             </connections>
@@ -664,117 +660,22 @@
         <window title="DynamicPagerExample" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" animationBehavior="default" id="583">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="240" width="400" height="344"/>
+            <rect key="contentRect" x="196" y="240" width="400" height="352"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
             <view key="contentView" id="586">
-                <rect key="frame" x="0.0" y="0.0" width="400" height="344"/>
+                <rect key="frame" x="0.0" y="0.0" width="400" height="352"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <customView translatesAutoresizingMaskIntoConstraints="NO" id="589" customClass="MBTDynamicPager">
-                        <rect key="frame" x="20" y="164" width="360" height="160"/>
+                        <rect key="frame" x="20" y="125" width="360" height="207"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <constraints>
-                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="360" id="590"/>
-                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="160" id="591"/>
+                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="200" id="9tK-gz-S8T"/>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="360" id="Wha-y0-Hyd"/>
                         </constraints>
                     </customView>
-                    <box autoresizesSubviews="NO" title="Box" borderType="line" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="743">
-                        <rect key="frame" x="17" y="16" width="366" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="364" height="82"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <textField toolTip="Sets the padding between each block on a page by setting the DynamicPager's value of interblockPadding." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="760">
-                                    <rect key="frame" x="15" y="56" width="108" height="14"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <constraints>
-                                        <constraint firstAttribute="height" constant="14" id="828"/>
-                                    </constraints>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Interblock Padding:" id="761">
-                                        <font key="font" metaFont="smallSystem"/>
-                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                </textField>
-                                <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="764">
-                                    <rect key="frame" x="128" y="54" width="96" height="16"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <constraints>
-                                        <constraint firstAttribute="width" constant="96" id="769"/>
-                                    </constraints>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="765">
-                                        <numberFormatter key="formatter" formatterBehavior="default10_4" positiveFormat="#,##0.###" negativeFormat="#,##0.###" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="309" minimumFractionDigits="0" maximumFractionDigits="3" id="766">
-                                            <real key="roundingIncrement" value="0.0"/>
-                                            <real key="minimum" value="0.0"/>
-                                            <metadata>
-                                                <bool key="localizesFormat" value="YES"/>
-                                            </metadata>
-                                        </numberFormatter>
-                                        <font key="font" metaFont="smallSystem"/>
-                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                    <connections>
-                                        <binding destination="494" name="value" keyPath="self.dynamicPager.interblockPadding" id="792"/>
-                                    </connections>
-                                </textField>
-                                <button verticalHuggingPriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="810">
-                                    <rect key="frame" x="15" y="29" width="151" height="22"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <string key="toolTip">This sets the DynamicPager blocksDefaultToIsoalted field. Since this example is configured to set isolated on a per-block basis, (the AppDelegate responds to blockShouldBeIsolated:) then setting this should have no effect unless the "ignore per-block isolation" is set.</string>
-                                    <buttonCell key="cell" type="check" title="blocksDefaultToIsolated" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="811">
-                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                        <font key="font" metaFont="smallSystem"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <binding destination="494" name="value" keyPath="self.dynamicPager.blocksDefaultToIsolated" id="821"/>
-                                    </connections>
-                                </button>
-                                <button translatesAutoresizingMaskIntoConstraints="NO" id="927">
-                                    <rect key="frame" x="15" y="11" width="277" height="18"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <string key="toolTip">Use binding to set the DynamicPager to the NSArrayController arrangedObjects. Otherwise, set directly. Setting this should have no visual effect event thought the mechanism  supplying the pager content is different.</string>
-                                    <buttonCell key="cell" type="check" title="use content binding (this should have no effect)" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="928">
-                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                        <font key="font" metaFont="smallSystem"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <binding destination="494" name="value" keyPath="self.dynamicPager.blocksDefaultToIsolated" id="929"/>
-                                    </connections>
-                                </button>
-                                <button toolTip="If set, then use the DynamicPager's value of blocksDefaultToIsolated for all blocks." translatesAutoresizingMaskIntoConstraints="NO" id="916">
-                                    <rect key="frame" x="168" y="29" width="162" height="18"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <buttonCell key="cell" type="check" title="ignore per-block isolation" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="917">
-                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                        <font key="font" metaFont="smallSystem"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <binding destination="494" name="value" keyPath="self.ignorePerBlockIsolation" id="926"/>
-                                    </connections>
-                                </button>
-                            </subviews>
-                        </view>
-                        <constraints>
-                            <constraint firstItem="760" firstAttribute="baseline" secondItem="764" secondAttribute="baseline" id="777"/>
-                            <constraint firstItem="764" firstAttribute="leading" secondItem="760" secondAttribute="trailing" constant="8" symbolic="YES" id="778"/>
-                            <constraint firstItem="810" firstAttribute="baseline" secondItem="916" secondAttribute="baseline" id="924"/>
-                            <constraint firstItem="916" firstAttribute="leading" secondItem="810" secondAttribute="trailing" constant="7" id="925"/>
-                            <constraint firstItem="927" firstAttribute="leading" secondItem="810" secondAttribute="leading" id="952"/>
-                            <constraint firstItem="927" firstAttribute="top" secondItem="810" secondAttribute="bottom" constant="6" symbolic="YES" id="953"/>
-                            <constraint firstItem="760" firstAttribute="top" secondItem="743" secondAttribute="top" constant="11" id="1075"/>
-                            <constraint firstItem="760" firstAttribute="leading" secondItem="743" secondAttribute="leading" constant="16" id="1076"/>
-                            <constraint firstItem="810" firstAttribute="leading" secondItem="743" secondAttribute="leading" constant="16" id="1077"/>
-                            <constraint firstItem="764" firstAttribute="top" secondItem="743" secondAttribute="top" constant="11" id="1078"/>
-                            <constraint firstAttribute="bottom" secondItem="927" secondAttribute="bottom" constant="11" id="1079"/>
-                            <constraint firstItem="810" firstAttribute="top" secondItem="764" secondAttribute="bottom" constant="6" id="Jsc-TN-xMF"/>
-                        </constraints>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                    </box>
                     <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="832">
-                        <rect key="frame" x="181" y="133" width="38" height="24"/>
+                        <rect key="frame" x="181" y="94" width="38" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" alignment="left" style="rounded" trackingMode="selectOne" id="833">
                             <font key="font" metaFont="system"/>
@@ -784,11 +685,8 @@
                         </segmentedCell>
                     </segmentedControl>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="849">
-                        <rect key="frame" x="149" y="132" width="28" height="27"/>
+                        <rect key="frame" x="158" y="93" width="19" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <constraints>
-                            <constraint firstAttribute="width" constant="24" id="906"/>
-                        </constraints>
                         <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="NSGoLeftTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="850">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -799,11 +697,8 @@
                         </connections>
                     </button>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="845">
-                        <rect key="frame" x="223" y="132" width="28" height="27"/>
+                        <rect key="frame" x="223" y="93" width="19" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <constraints>
-                            <constraint firstAttribute="width" constant="24" id="903"/>
-                        </constraints>
                         <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="NSGoRightTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="846">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -814,11 +709,11 @@
                         </connections>
                     </button>
                     <button toolTip="Log information on the blocks making up the current page to console." translatesAutoresizingMaskIntoConstraints="NO" id="867">
-                        <rect key="frame" x="354" y="129" width="28" height="30"/>
+                        <rect key="frame" x="360" y="97" width="20" height="20"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <constraints>
-                            <constraint firstAttribute="height" constant="30" id="897"/>
-                            <constraint firstAttribute="width" constant="28" id="898"/>
+                            <constraint firstAttribute="height" constant="20" id="Q3j-Hk-a0L"/>
+                            <constraint firstAttribute="width" constant="20" id="cPU-tG-DY6"/>
                         </constraints>
                         <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="NSInfo" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="868">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -828,24 +723,99 @@
                             <action selector="dumpPage:" target="494" id="876"/>
                         </connections>
                     </button>
+                    <textField toolTip="Sets the padding between each block on a page by setting the DynamicPager's value of interblockPadding." translatesAutoresizingMaskIntoConstraints="NO" id="4kI-BJ-1MF">
+                        <rect key="frame" x="27" y="58" width="108" height="14"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Interblock Padding:" id="Q5Q-eA-Od1">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="AuR-3i-juV">
+                        <rect key="frame" x="140" y="56" width="96" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="96" id="veP-kr-0mo"/>
+                        </constraints>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2e3-2B-fuO">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" positiveFormat="#,##0.###" negativeFormat="#,##0.###" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="309" minimumFractionDigits="0" maximumFractionDigits="3" id="gEi-3d-YcW">
+                                <real key="roundingIncrement" value="0.0"/>
+                                <real key="minimum" value="0.0"/>
+                                <metadata>
+                                    <bool key="localizesFormat" value="YES"/>
+                                </metadata>
+                            </numberFormatter>
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="494" name="value" keyPath="self.dynamicPager.interblockPadding" id="aFL-5N-kHK"/>
+                        </connections>
+                    </textField>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="7n8-dG-oln">
+                        <rect key="frame" x="27" y="35" width="151" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <string key="toolTip">This sets the DynamicPager blocksDefaultToIsoalted field. Since this example is configured to set isolated on a per-block basis, (the AppDelegate responds to blockShouldBeIsolated:) then setting this should have no effect unless the "ignore per-block isolation" is set.</string>
+                        <buttonCell key="cell" type="check" title="blocksDefaultToIsolated" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="2NM-ck-U1n">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="494" name="value" keyPath="self.dynamicPager.blocksDefaultToIsolated" id="qn7-x5-SBk"/>
+                        </connections>
+                    </button>
+                    <button translatesAutoresizingMaskIntoConstraints="NO" id="zn3-3B-DAO">
+                        <rect key="frame" x="27" y="17" width="277" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <string key="toolTip">Use binding to set the DynamicPager to the NSArrayController arrangedObjects. Otherwise, set directly. Setting this should have no visual effect event thought the mechanism  supplying the pager content is different.</string>
+                        <buttonCell key="cell" type="check" title="use content binding (this should have no effect)" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="LMP-Zc-lUo">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="494" name="value" keyPath="self.dynamicPager.blocksDefaultToIsolated" id="JM3-ts-wx9"/>
+                        </connections>
+                    </button>
+                    <button toolTip="If set, then use the DynamicPager's value of blocksDefaultToIsolated for all blocks." translatesAutoresizingMaskIntoConstraints="NO" id="qs8-sU-p3u">
+                        <rect key="frame" x="181" y="35" width="162" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="ignore per-block isolation" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="Kmj-D3-fm9">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="494" name="value" keyPath="self.ignorePerBlockIsolation" id="Pve-gc-uq5"/>
+                        </connections>
+                    </button>
                 </subviews>
                 <constraints>
-                    <constraint firstItem="589" firstAttribute="leading" secondItem="586" secondAttribute="leading" constant="20" symbolic="YES" id="597"/>
-                    <constraint firstItem="589" firstAttribute="top" secondItem="586" secondAttribute="top" constant="20" symbolic="YES" id="598"/>
-                    <constraint firstAttribute="trailing" secondItem="589" secondAttribute="trailing" constant="20" symbolic="YES" id="604"/>
-                    <constraint firstItem="832" firstAttribute="top" secondItem="589" secondAttribute="bottom" constant="8" symbolic="YES" id="841"/>
-                    <constraint firstItem="849" firstAttribute="centerY" secondItem="832" secondAttribute="centerY" id="858"/>
-                    <constraint firstItem="832" firstAttribute="centerY" secondItem="845" secondAttribute="centerY" id="860"/>
-                    <constraint firstItem="832" firstAttribute="leading" secondItem="849" secondAttribute="trailing" constant="8" symbolic="YES" id="861"/>
-                    <constraint firstItem="845" firstAttribute="leading" secondItem="832" secondAttribute="trailing" constant="8" symbolic="YES" id="862"/>
-                    <constraint firstAttribute="trailing" secondItem="867" secondAttribute="trailing" constant="18" id="896"/>
-                    <constraint firstAttribute="bottom" secondItem="867" secondAttribute="bottom" constant="129" id="935"/>
-                    <constraint firstItem="743" firstAttribute="leading" secondItem="586" secondAttribute="leading" constant="20" symbolic="YES" id="1083"/>
-                    <constraint firstAttribute="bottom" secondItem="849" secondAttribute="bottom" constant="135" id="1084"/>
-                    <constraint firstAttribute="trailing" secondItem="743" secondAttribute="trailing" constant="20" symbolic="YES" id="1085"/>
-                    <constraint firstAttribute="bottom" secondItem="743" secondAttribute="bottom" constant="20" symbolic="YES" id="1100"/>
-                    <constraint firstItem="743" firstAttribute="top" secondItem="832" secondAttribute="bottom" constant="37" id="1102"/>
-                    <constraint firstItem="832" firstAttribute="centerX" secondItem="743" secondAttribute="centerX" id="1103"/>
+                    <constraint firstAttribute="trailing" secondItem="867" secondAttribute="trailing" constant="20" id="4pD-Fu-GVe"/>
+                    <constraint firstItem="832" firstAttribute="top" secondItem="589" secondAttribute="bottom" constant="8" symbolic="YES" id="6Yt-R4-qeV"/>
+                    <constraint firstAttribute="trailing" secondItem="589" secondAttribute="trailing" constant="20" id="Aq7-DW-tsI"/>
+                    <constraint firstAttribute="centerX" secondItem="832" secondAttribute="centerX" id="Cvu-jq-nwW"/>
+                    <constraint firstItem="867" firstAttribute="centerY" secondItem="832" secondAttribute="centerY" id="DzI-KM-g4h"/>
+                    <constraint firstItem="589" firstAttribute="leading" secondItem="586" secondAttribute="leading" constant="20" id="FaA-C1-GNn"/>
+                    <constraint firstItem="4kI-BJ-1MF" firstAttribute="baseline" secondItem="AuR-3i-juV" secondAttribute="baseline" id="GcI-nk-xfe"/>
+                    <constraint firstItem="zn3-3B-DAO" firstAttribute="top" secondItem="7n8-dG-oln" secondAttribute="bottom" constant="6" symbolic="YES" id="Ju2-nG-ZIi"/>
+                    <constraint firstItem="7n8-dG-oln" firstAttribute="leading" secondItem="4kI-BJ-1MF" secondAttribute="leading" id="LFv-CI-2B6"/>
+                    <constraint firstItem="4kI-BJ-1MF" firstAttribute="leading" secondItem="586" secondAttribute="leading" constant="30" id="Odl-uU-Baw"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="qs8-sU-p3u" secondAttribute="trailing" constant="20" symbolic="YES" id="U9c-Ti-gCY"/>
+                    <constraint firstItem="AuR-3i-juV" firstAttribute="leading" secondItem="4kI-BJ-1MF" secondAttribute="trailing" constant="8" symbolic="YES" id="VOL-kX-qZi"/>
+                    <constraint firstItem="4kI-BJ-1MF" firstAttribute="top" secondItem="832" secondAttribute="bottom" constant="24" id="VWm-r0-h2M"/>
+                    <constraint firstItem="qs8-sU-p3u" firstAttribute="leading" secondItem="7n8-dG-oln" secondAttribute="trailing" constant="8" symbolic="YES" id="ayP-pg-mL9"/>
+                    <constraint firstItem="7n8-dG-oln" firstAttribute="leading" secondItem="zn3-3B-DAO" secondAttribute="leading" id="bu1-lL-jWM"/>
+                    <constraint firstItem="589" firstAttribute="top" secondItem="586" secondAttribute="top" constant="20" id="cdk-PD-YuJ"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="AuR-3i-juV" secondAttribute="trailing" constant="20" symbolic="YES" id="dDS-be-2zU"/>
+                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="zn3-3B-DAO" secondAttribute="trailing" constant="20" symbolic="YES" id="dRF-Xk-A6C"/>
+                    <constraint firstItem="qs8-sU-p3u" firstAttribute="baseline" secondItem="7n8-dG-oln" secondAttribute="baseline" id="g18-cW-TdU"/>
+                    <constraint firstAttribute="bottom" secondItem="zn3-3B-DAO" secondAttribute="bottom" constant="20" symbolic="YES" id="j0A-Aj-RIP"/>
+                    <constraint firstItem="832" firstAttribute="leading" secondItem="849" secondAttribute="trailing" constant="8" id="kUc-yV-MYL"/>
+                    <constraint firstItem="849" firstAttribute="centerY" secondItem="845" secondAttribute="centerY" id="vDZ-Gr-O49"/>
+                    <constraint firstItem="845" firstAttribute="leading" secondItem="832" secondAttribute="trailing" constant="8" id="xUG-cP-til"/>
+                    <constraint firstItem="7n8-dG-oln" firstAttribute="top" secondItem="4kI-BJ-1MF" secondAttribute="bottom" constant="8" symbolic="YES" id="y3V-fI-rhv"/>
+                    <constraint firstItem="849" firstAttribute="centerY" secondItem="832" secondAttribute="centerY" id="zLN-3C-8sw"/>
                 </constraints>
             </view>
             <toolbar key="toolbar" implicitIdentifier="336651A6-C40D-4399-9B7D-2798041A2CDA" autosavesConfiguration="NO" displayMode="labelOnly" sizeMode="regular" id="610">
@@ -916,11 +886,11 @@
                         </subviews>
                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </clipView>
-                    <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" id="621">
+                    <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="621">
                         <rect key="frame" x="1" y="79" width="282" height="15"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
-                    <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="37" id="623">
+                    <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="623">
                         <rect key="frame" x="224" y="17" width="15" height="102"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
@@ -1133,7 +1103,6 @@
                 <string>backgroundColor</string>
             </declaredKeys>
         </arrayController>
-        <customCell alignment="left" id="1223"/>
     </objects>
     <resources>
         <image name="NSAdvanced" width="32" height="32"/>

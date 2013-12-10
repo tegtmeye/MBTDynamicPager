@@ -115,7 +115,15 @@
 
 - (IBAction)dumpPage:(id)sender
 {
-  [self.dynamicPager logBlockFramesForPage:[self.dynamicPager currentPage]];
+//  [self.dynamicPager logBlockFramesForPage:[self.dynamicPager currentPage]];
+  [self.window visualizeConstraints:[self.window.contentView constraints]];
+  [self.window visualizeConstraints:[self.box constraints]];
+
+  NSViewController *block = [[self.viewArrayController arrangedObjects] objectAtIndex:[self.dynamicPager currentPage]];
+
+  [self.window visualizeConstraints:[block.view constraints]];
+
+  NSLog(@"view constraints: %@",[self.window.contentView constraints]);
 }
 
 #pragma mark - MBTDynamicPagerDelegate

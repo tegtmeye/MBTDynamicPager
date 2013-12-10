@@ -38,4 +38,7 @@
 
 - (IBAction)dumpPage:(id)sender;
 
+
+
+@property (weak) IBOutlet NSView *box;
 @end
