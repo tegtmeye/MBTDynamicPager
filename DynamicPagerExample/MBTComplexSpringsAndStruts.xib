@@ -49,7 +49,7 @@
                     </textFieldCell>
                 </textField>
                 <textField verticalHuggingPriority="750" id="23">
-                    <rect key="frame" x="162" y="16" width="118" height="49"/>
+                    <rect key="frame" x="162" y="16" width="118.00000000000001" height="49"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
                     <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="24">
                         <font key="font" metaFont="system"/>

@@ -8,6 +8,14 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "MBTSimpleView.h"
+
+
+static NSString *kSimpleSpringsAndStrutsNibName = @"MBTSimpleSpringsAndStruts";
+static NSString *kComplexSpringsAndStrutsNibName = @"MBTComplexSpringsAndStruts";
+static NSString *kSimpleAutoLayoutNibName = @"MBTSimpleAutoLayout";
+static NSString *kComplexAutoLayoutNibName = @"MBTComplexAutoLayout";
+
 enum BlockControllerStyle {
   simpleStyle = 0,
   complexStyle = 1
@@ -26,13 +34,26 @@ enum BlockControllerStyle {
  */
 @interface BlockViewController : NSViewController
 
+@property (nonatomic, weak) IBOutlet MBTSimpleView *backgroundView;
+
 @property (nonatomic, strong) NSString *label;
 @property (nonatomic, strong) NSColor *backgroundColor;
 
 @property (nonatomic, assign) BOOL isolatedBlock;
 
-@property (nonatomic, assign) enum BlockControllerStyle blockStyle;
-@property (nonatomic, assign) BOOL viewUsesAutoLayout;
-@property (nonatomic, assign) BOOL viewIsResizable;
+@property (nonatomic, readonly) enum BlockControllerStyle blockStyle;
+@property (nonatomic, readonly) BOOL viewUsesAutoLayout;
+
+-(id)init;
+
+/**
+ *  Set label and color to nil to have them cycle
+ */
+-(id)initWithBlockStyle:(enum BlockControllerStyle)blockStyle
+     viewUsesAutoLayout:(BOOL)viewUsesAutoLayout
+                  label:(NSString *)label
+                  color:(NSColor *)color
+               isolated:(BOOL)isolated
+             forNibName:(NSString *)nibName;
 
 @end

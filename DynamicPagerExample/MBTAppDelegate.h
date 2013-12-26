@@ -29,9 +29,12 @@
 // setting this should have no effect.
 @property (nonatomic, assign) BOOL useContentBinding;
 
-
 @property (nonatomic, readonly) BOOL canPageDown;
 @property (nonatomic, readonly) BOOL canPageUp;
+
+- (IBAction)updateViewType:(id)sender;
+- (IBAction)updateLayout:(id)sender;
+- (IBAction)triggerPagerUpdate:(id)sender;
 
 - (IBAction)previousPage:(id)sender;
 - (IBAction)nextPage:(id)sender;
@@ -39,6 +42,4 @@
 - (IBAction)dumpPage:(id)sender;
 
 
-
-@property (weak) IBOutlet NSView *box;
 @end

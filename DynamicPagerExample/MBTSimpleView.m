@@ -29,6 +29,11 @@
   return self;
 }
 
+- (void)dealloc
+{
+  NSLog(@"MBTSimpleView dealloc");
+}
+
 - (void)drawRect:(NSRect)dirtyRect
 {
   [self.backgroundColor setFill];

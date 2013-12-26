@@ -775,7 +775,7 @@
                             <font key="font" metaFont="smallSystem"/>
                         </buttonCell>
                         <connections>
-                            <binding destination="494" name="value" keyPath="self.dynamicPager.blocksDefaultToIsolated" id="JM3-ts-wx9"/>
+                            <binding destination="494" name="value" keyPath="self.useContentBinding" id="nlw-NP-Og5"/>
                         </connections>
                     </button>
                     <button toolTip="If set, then use the DynamicPager's value of blocksDefaultToIsolated for all blocks." translatesAutoresizingMaskIntoConstraints="NO" id="qs8-sU-p3u">
@@ -876,6 +876,9 @@
                                         <buttonCell key="dataCell" type="check" bezelStyle="regularSquare" imagePosition="only" inset="2" id="914">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
+                                            <connections>
+                                                <action selector="triggerPagerUpdate:" target="494" id="vIX-4W-Gcw"/>
+                                            </connections>
                                         </buttonCell>
                                         <connections>
                                             <binding destination="655" name="value" keyPath="arrangedObjects.isolatedBlock" id="913"/>
@@ -967,19 +970,19 @@
                                 </buttonCell>
                                 <cells>
                                     <column>
-                                        <buttonCell type="radio" title="Simple" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="977">
+                                        <buttonCell type="radio" title="Simple" imagePosition="left" alignment="left" state="on" inset="2" id="977">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
-                                        <buttonCell type="radio" title="Complex" imagePosition="left" alignment="left" inset="2" id="978">
+                                        <buttonCell type="radio" title="Complex" imagePosition="left" alignment="left" tag="1" inset="2" id="978">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
                                     </column>
                                 </cells>
                                 <connections>
-                                    <action selector="updateView:" target="494" id="1234"/>
-                                    <binding destination="655" name="selectedIndex" keyPath="selection.blockStyle" id="1107"/>
+                                    <action selector="updateViewType:" target="494" id="kjh-CM-9YH"/>
+                                    <binding destination="655" name="selectedIndex" keyPath="selection.blockStyle" id="tY3-e8-K2P"/>
                                 </connections>
                             </matrix>
                             <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1112">
@@ -997,34 +1000,21 @@
                                 </buttonCell>
                                 <cells>
                                     <column>
-                                        <buttonCell type="radio" title="Springs and Struts" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="1116">
+                                        <buttonCell type="radio" title="Springs and Struts" imagePosition="left" alignment="left" state="on" inset="2" id="1116">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
-                                        <buttonCell type="radio" title="AutoLayout" imagePosition="left" alignment="left" inset="2" id="1115">
+                                        <buttonCell type="radio" title="AutoLayout" imagePosition="left" alignment="left" tag="1" inset="2" id="1115">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
                                     </column>
                                 </cells>
                                 <connections>
-                                    <binding destination="655" name="selectedIndex" keyPath="selection.viewUsesAutoLayout" id="1235"/>
+                                    <action selector="updateLayout:" target="494" id="xtD-ql-lFz"/>
+                                    <binding destination="655" name="selectedIndex" keyPath="selection.viewUsesAutoLayout" id="yX7-kl-qW3"/>
                                 </connections>
                             </matrix>
-                            <button translatesAutoresizingMaskIntoConstraints="NO" id="1175">
-                                <rect key="frame" x="246" y="32" width="82" height="18"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="check" title="Resizable" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="1176">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                    <connections>
-                                        <binding destination="655" name="value" keyPath="selection.viewIsResizable" id="1237"/>
-                                    </connections>
-                                </buttonCell>
-                                <connections>
-                                    <binding destination="655" name="value" keyPath="selection.viewIsResizable" id="1238"/>
-                                </connections>
-                            </button>
                         </subviews>
                     </view>
                     <constraints>
@@ -1040,8 +1030,6 @@
                         <constraint firstItem="1112" firstAttribute="top" secondItem="975" secondAttribute="top" id="1172"/>
                         <constraint firstItem="1112" firstAttribute="leading" secondItem="975" secondAttribute="trailing" constant="11" id="1173"/>
                         <constraint firstItem="1112" firstAttribute="bottom" secondItem="975" secondAttribute="bottom" id="1193"/>
-                        <constraint firstItem="1175" firstAttribute="top" secondItem="1112" secondAttribute="top" id="1208"/>
-                        <constraint firstItem="1175" firstAttribute="leading" secondItem="1112" secondAttribute="trailing" constant="8" symbolic="YES" id="1210"/>
                         <constraint firstItem="706" firstAttribute="centerY" secondItem="711" secondAttribute="centerY" id="1230"/>
                     </constraints>
                     <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>

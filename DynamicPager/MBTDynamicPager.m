@@ -16,9 +16,8 @@
 
 static const NSString *kFittingWidthKey = @"fittingWidth";
 static const NSString *kIsolatedBlockKey = @"isolatedBlockKey";
-static const NSString *kPageBlockKey = @"pageBlocks";
+static const NSString *kPageBlockFittingInfoArrayKey = @"PageBlockFittingInfoArrayKey";
 static const NSString *kFlexibleContentKey = @"flexibleContent";
-static const NSString *kFittingInfoArrayKey = @"fittingInfoArrayKey";
 
 static BOOL userRequestedLog(void)
 {
@@ -30,6 +29,10 @@ static BOOL userRequestedVisualAids(void)
   return [[NSUserDefaults standardUserDefaults] boolForKey:@"MBTDynamicPagerVisualAids"];
 }
 
+static BOOL userRequestedConsistencyCheck (void)
+{
+  return [[NSUserDefaults standardUserDefaults] boolForKey:@"MBTDynamicPagerConsistencyCheck"];
+}
 
 
 @interface MyContainerView : NSView
@@ -54,24 +57,30 @@ static BOOL userRequestedVisualAids(void)
 
 @end
 
+
 // Simple container object for storing block fitting data in an NSArray
 @interface BlockFittingInfo : NSObject
 
 @property (nonatomic, assign) BOOL widthConstrained;
 @property (nonatomic, assign) BOOL heightConstrained;
 @property (nonatomic, assign) NSSize fittingSize;
+@property (nonatomic) NSViewController *blockController;
 
 @end
 
 @implementation BlockFittingInfo
 
-- (id)initWithConstraint:(BOOL)width height:(BOOL)height andFittingSize:(NSSize)fittingSize
+- (id)initWithConstraint:(BOOL)width
+                  height:(BOOL)height
+             fittingSize:(NSSize)fittingSize
+         blockController:(NSViewController *)blockController
 {
   self = [super init];
   if (self) {
     _widthConstrained = width;
     _heightConstrained = height;
     _fittingSize = fittingSize;
+    _blockController = blockController;
   }
 
   return self;
@@ -83,35 +92,31 @@ static BOOL userRequestedVisualAids(void)
 
 
 
+
+
+
+
 @interface MBTDynamicPager ()
 
 @property (nonatomic, strong) id contentArrayObservableObject;
 @property (nonatomic, strong) NSString *contentArrayBindingKeyPath;
-@property (nonatomic, strong) NSSet *viewBindingObservers;
-@property (nonatomic, strong) NSMapTable *blockViewMap;
 
 @property (nonatomic, strong) NSTabView *tabView;
 @property (nonatomic, strong) NSMutableArray *pages;
+@property (nonatomic, strong) NSSet *observingBlocks;
 
 @property (nonatomic, assign, readwrite) NSInteger numberOfPages;
-//@property (nonatomic, assign, readwrite) NSSize intrinsicContentSize;
 
 - (NSArray *)currentBlockArray;
-
-- (void)updateViewObservations;
+- (void)updateBlockObservations;
 
 @end
 
-@implementation MBTDynamicPager
 
-//+ (BOOL)requiresConstraintBasedLayout
-//{
-//  return YES;
-//}
+@implementation MBTDynamicPager
 
 - (id)initWithFrame:(NSRect)frame
 {
-//  NSLog(@"Creating new pager!!!!!!!!");
   self = [super initWithFrame:frame];
   if (self) {
     self.interblockPadding = 8.0f;
@@ -119,8 +124,6 @@ static BOOL userRequestedVisualAids(void)
     self.defaultBlockHeight = 100.0f;
     self.blocksDefaultToIsolated = YES;
     
-    self.viewBindingObservers = [NSSet set];
-
     self.tabView = [[NSTabView alloc] initWithFrame:frame];
     self.tabView.delegate = self;
     [self.tabView setTabViewType:NSNoTabsLineBorder];
@@ -128,6 +131,7 @@ static BOOL userRequestedVisualAids(void)
     [self addSubview:self.tabView];
 
     self.pages = [NSMutableArray array];
+    self.observingBlocks = [NSSet set];
 
     NSDictionary *viewsDictionary = @{@"view" : self.tabView};
     [self addConstraints:[NSLayoutConstraint
@@ -147,23 +151,50 @@ static BOOL userRequestedVisualAids(void)
   return self;
 }
 
+- (void)dealloc
+{
+  if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath) {
+    [self.contentArrayObservableObject removeObserver:self
+                                           forKeyPath:self.contentArrayBindingKeyPath];
+  }
+
+  for(NSViewController *blockController in self.observingBlocks) {
+      [blockController removeObserver:self forKeyPath:@"view"];
+  }
+}
 
 - (void)bind:(NSString *)binding toObject:(id)observable withKeyPath:(NSString *)keyPath options:(NSDictionary *)options
 {
   if([binding isEqualToString:NSContentArrayBinding]) {
+    // reset if we were bound to something else or had content prior
     if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath)
       [self unbind:NSContentArrayBinding];
-    
+    else {
+      self.contentArray = nil;
+    }
+
+
     self.contentArrayObservableObject = observable;
     self.contentArrayBindingKeyPath = keyPath;
     
-    NSLog(@"MBTDynamicPager: binding and adding self as keybath observer");
+    NSLog(@"MBTDynamicPager: binding and adding self as observer for object %@ and keypath %@",
+          self.contentArrayObservableObject,self.contentArrayBindingKeyPath);
+
     [self.contentArrayObservableObject addObserver:self
                                         forKeyPath:self.contentArrayBindingKeyPath
                                            options:0
                                            context:nil];
-    NSLog(@"MBTDynamicPager: binding and calling updateViewObservations");
-    [self updateViewObservations];
+
+
+    NSArray *currentBlockArray = [self currentBlockArray];
+
+    for(NSViewController *blockController in currentBlockArray) {
+      [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
+
+      [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
+    }
+
+    self.observingBlocks = [NSSet setWithArray:currentBlockArray];
 
     NSLog(@"MBTDynamicPager: done binding, triggering noteLayoutChanged");
     [self noteLayoutChanged];
@@ -180,39 +211,28 @@ static BOOL userRequestedVisualAids(void)
     if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath) {
       [self.contentArrayObservableObject removeObserver:self forKeyPath:self.contentArrayBindingKeyPath];
     }
-    
+
+    for(NSViewController *blockController in self.observingBlocks) {
+      [blockController removeObserver:self forKeyPath:@"view"];
+    }
+
     self.contentArrayObservableObject = nil;
     self.contentArrayBindingKeyPath = nil;
-    
-    // this may cause things to revert back to self.contentArray;
-    [self updateViewObservations];
+    self.observingBlocks = [NSSet set];
 
     NSLog(@"MBTDynamicPager: unbinding. triggering retile");
+
+    // this may cause things to revert back to self.contentArray;
     [self noteLayoutChanged];
   }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-  if(object == self.contentArrayObservableObject && [keyPath isEqualToString:self.contentArrayBindingKeyPath]) {
-    NSLog(@"MBTDynamicPager: content changed. calling updateViewObservations");
-    [self updateViewObservations];
-
-
-    NSLog(@"MBTDynamicPager: content changed. triggering retile");
-    [self noteLayoutChanged];
-  }
-  else if([self.viewBindingObservers containsObject:object] && [keyPath isEqualToString:@"view"]) {
-    NSView *view = [self.blockViewMap objectForKey:object];
-    
-    if((id)view != [NSNull null]) {
-      [view removeFromSuperview];
-    }
-
-    view = [object valueForKeyPath:@"view"];
-    [self.blockViewMap setObject:(view?view:[NSNull null]) forKey:object];
-    
-    NSLog(@"MBTDynamicPager: observed view content change. triggering retile");
+  if(object == self.contentArrayObservableObject &&
+     [keyPath isEqualToString:self.contentArrayBindingKeyPath])
+  {
+    [self updateBlockObservations];
     [self noteLayoutChanged];
   }
 }
@@ -224,8 +244,9 @@ static BOOL userRequestedVisualAids(void)
   
   NSTabViewItem *selectedItem = [self.tabView selectedTabViewItem];
   
-  if(selectedItem != [self.tabView tabViewItemAtIndex:currentPage])
+  if(selectedItem != [self.tabView tabViewItemAtIndex:currentPage]) {
     [self.tabView selectTabViewItemAtIndex:currentPage];
+  }
 }
 
 - (NSInteger)currentPage
@@ -238,11 +259,16 @@ static BOOL userRequestedVisualAids(void)
   return [self.tabView indexOfTabViewItem:selectedItem];
 }
 
+- (NSInteger)numberOfPages
+{
+  return self.tabView.numberOfTabViewItems;
+}
+
 - (void)setInterblockPadding:(CGFloat)interblockPadding
 {
   _interblockPadding = interblockPadding;
 
-  NSLog(@"setInterblockPadding to %f, triggering retile",interblockPadding);
+//  NSLog(@"setInterblockPadding to %f, triggering retile",interblockPadding);
   [self noteLayoutChanged];
 }
 
@@ -250,38 +276,27 @@ static BOOL userRequestedVisualAids(void)
 {
   _blocksDefaultToIsolated = blocksDefaultToIsolated;
 
-  NSLog(@"setBlocksDefaultToIsolated to %i, triggering retile",blocksDefaultToIsolated);
+//  NSLog(@"setBlocksDefaultToIsolated to %i, triggering retile",blocksDefaultToIsolated);
   [self noteLayoutChanged];
 }
 
 - (void)setContentArray:(NSArray *)contentArray
 {
-  _contentArray = contentArray;
-  
   // if we are bound to something, then ignore updates to the contentArray.
-  if(!self.contentArrayObservableObject) {
-    [self updateViewObservations];
-
+  if(!(self.contentArrayObservableObject && self.contentArrayBindingKeyPath)) {
     NSLog(@"setContentArray. triggering retile");
+    _contentArray = contentArray;
+
+    [self updateBlockObservations];
     [self noteLayoutChanged];
   }
 }
 
-#if 0
-- (void)drawRect:(NSRect)dirtyRect
-{
-//  NSLog(@"MBTDynamicPager Drawing %@ in %@",NSStringFromRect(self.frame),NSStringFromRect([[self superview] frame]));
-
-  [[NSColor yellowColor] setFill];
-  
-  NSRectFill(self.bounds);
-}
-#endif
 
 - (void)setFrame:(NSRect)frameRect
 {
-  NSLog(@"MBTDynamicPager setFrame start with %lu pages and %lu block",
-        [self.pages count],[self.currentBlockArray count]);
+//  NSLog(@"MBTDynamicPager setFrame start with %lu pages and %lu block",
+//        [self.pages count],[self.currentBlockArray count]);
 
   [super setFrame:frameRect];
   
@@ -298,11 +313,13 @@ static BOOL userRequestedVisualAids(void)
     // a block onto the next page
     NSNumber *pageFittingWidth = [pageDict objectForKey:kFittingWidthKey];
     assert(pageFittingWidth);
-    
+    // todo prob should have a pad that triggers retile...
     if(tabviewframeWidth - [pageFittingWidth floatValue] < 0) {
-      NSLog(@"MBTDynamicPager. Sufficient additional space. Triggering retile");
-      [self performSelectorOnMainThread:@selector(noteLayoutChanged) withObject:nil waitUntilDone:NO];
-      NSLog(@"MBTDynamicPager setFrame finished");
+//      NSLog(@"MBTDynamicPager. Sufficient additional space. Triggering retile");
+      [self performSelectorOnMainThread:@selector(noteLayoutChanged)
+                             withObject:nil
+                          waitUntilDone:NO];
+//      NSLog(@"MBTDynamicPager setFrame finished");
       return;
     }
   
@@ -326,9 +343,11 @@ static BOOL userRequestedVisualAids(void)
         CGFloat availableWidth = (tabviewframeWidth - prevPageFittingWidth);
         if(additionalBlockWidth < availableWidth) {
           // just need on to trigger retile
-          NSLog(@"MBTDynamicPager. Sufficient additional space with previous page. Triggering retile");
-          [self performSelectorOnMainThread:@selector(noteLayoutChanged) withObject:nil waitUntilDone:NO];
-          NSLog(@"MBTDynamicPager setFrame finished");
+//          NSLog(@"MBTDynamicPager. Sufficient additional space with previous page. Triggering retile");
+          [self performSelectorOnMainThread:@selector(noteLayoutChanged)
+                                 withObject:nil
+                              waitUntilDone:NO];
+//          NSLog(@"MBTDynamicPager setFrame finished");
           return;
         }
       }
@@ -338,7 +357,155 @@ static BOOL userRequestedVisualAids(void)
     prevPageFittingWidth = [pageFittingWidth floatValue];
   }
 
-  NSLog(@"MBTDynamicPager setFrame (final) finished");
+//  NSLog(@"MBTDynamicPager setFrame (final) finished");
+}
+
+-(void)updateConstraints
+{
+  NSLog(@">>>>>>>>>>>>>>>MBTDynamicPager updateConstraints start");
+
+  assert(self.pages.count == self.tabView.numberOfTabViewItems);
+  for(NSInteger pageIndex=0; pageIndex<self.pages.count; ++pageIndex) {
+    NSDictionary *pageDict = [self.pages objectAtIndex:pageIndex];
+    NSTabViewItem *tabViewItem = [self.tabView.tabViewItems objectAtIndex:pageIndex];
+
+    NSLog(@"Tabview %@ (view %@) has subviews %@",tabViewItem,tabViewItem.view,[tabViewItem.view subviews]);
+
+    [tabViewItem.view removeConstraints:[tabViewItem.view constraints]];
+
+    BlockFittingInfo *previousFittingInfo = 0;
+    NSView *previousBlock = 0;
+    NSView *previousFittingBlock = 0;
+    NSArray *blockFittingArray = [pageDict objectForKey:kPageBlockFittingInfoArrayKey];
+
+    if(MBTDYNAMICPAGER_DEBUG && userRequestedConsistencyCheck()) {
+      if([[tabViewItem.view subviews] count] != blockFittingArray.count) {
+        NSLog(@"Subviews (%lu) for tabView %@ does not equal the number of blocks (%lu) for this page",(unsigned long)[[tabViewItem.view subviews] count],tabViewItem,
+              (unsigned long)blockFittingArray.count);
+        assert(false);
+      }
+
+    }
+    
+    for(BlockFittingInfo *fittingInfo in blockFittingArray) {
+      NSView *blockView = fittingInfo.blockController.view;
+
+      NSLog(@"Block %@ (view %@) has superview %@",fittingInfo.blockController,
+            fittingInfo.blockController.view,blockView.superview);
+      assert(blockView.superview);
+
+      // don't leading pad the first block
+      if(!previousBlock) {
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeLeading
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:[tabViewItem view]
+                                           attribute:NSLayoutAttributeLeading
+                                           multiplier:1.0f
+                                           constant:0.0f]];
+      }
+      else {
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeLeading
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:previousBlock
+                                           attribute:NSLayoutAttributeTrailing
+                                           multiplier:1.0f
+                                           constant:self.interblockPadding]];
+      }
+
+
+      // top always gets pinned to the top
+      [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                         constraintWithItem:blockView
+                                         attribute:NSLayoutAttributeTop
+                                         relatedBy:NSLayoutRelationEqual
+                                         toItem:[tabViewItem view]
+                                         attribute:NSLayoutAttributeTop
+                                         multiplier:1.0f
+                                         constant:0.0f]];
+
+      if(fittingInfo.heightConstrained) {
+        //add height constraint
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeHeight
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:nil
+                                           attribute:NSLayoutAttributeNotAnAttribute
+                                           multiplier:1.0f
+                                           constant:fittingInfo.fittingSize.height]];
+      }
+      else {
+        // pin to bottom
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeBottom
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:[tabViewItem view]
+                                           attribute:NSLayoutAttributeBottom
+                                           multiplier:1.0f
+                                           constant:0.0f]];
+      }
+
+      if(fittingInfo.widthConstrained) {
+        //add width constraint
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeWidth
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:nil
+                                           attribute:NSLayoutAttributeNotAnAttribute
+                                           multiplier:1.0f
+                                           constant:fittingInfo.fittingSize.width]];
+
+      }
+      else {
+        if(previousFittingBlock && previousFittingInfo) {
+          // For each page, proportionally constrain each flexible block
+          // compared to its size within the block
+          CGFloat ratio = (previousFittingInfo.fittingSize.width /
+                           fittingInfo.fittingSize.width);
+
+          [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                             constraintWithItem:blockView
+                                             attribute:NSLayoutAttributeWidth
+                                             relatedBy:NSLayoutRelationEqual
+                                             toItem:previousFittingBlock
+                                             attribute:NSLayoutAttributeWidth
+                                             multiplier:1.0f
+                                             constant:ratio]];
+        }
+
+        previousFittingInfo = fittingInfo;
+        previousFittingBlock = blockView;
+      }
+
+      previousBlock = blockView;
+    }
+
+    NSNumber *flexibleContent = [pageDict objectForKey:kFlexibleContentKey];
+    assert(flexibleContent);
+    if([flexibleContent boolValue]) {
+      // pin the right size to the tabViewItem
+      [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                         constraintWithItem:previousBlock
+                                         attribute:NSLayoutAttributeTrailing
+                                         relatedBy:NSLayoutRelationEqual
+                                         toItem:[tabViewItem view]
+                                         attribute:NSLayoutAttributeTrailing
+                                         multiplier:1.0f
+                                         constant:0.0f]];
+    }
+  }
+
+  [super updateConstraints];
+
+  NSLog(@"\n\n\n\n");
+
+//  NSLog(@"MBTDynamicPager updateConstraints finished");
 }
 
 
@@ -362,50 +529,33 @@ static BOOL userRequestedVisualAids(void)
   return blockArray;
 }
 
-- (void)updateViewObservations
+- (void)updateBlockObservations
 {
-  NSArray *blockArray = [self currentBlockArray];
+  NSSet *blocksToObserve = [NSSet setWithArray:[self currentBlockArray]];
 
-  NSSet *currentBlockSet = [NSSet setWithArray:blockArray];
 
-  NSMutableSet *intersection = [NSMutableSet setWithSet:currentBlockSet];
-  [intersection intersectSet:self.viewBindingObservers];
-  
-  NSMutableSet *deletedBlocks = [NSMutableSet setWithSet:self.viewBindingObservers];
-  [deletedBlocks minusSet:intersection];
-  
-  NSMutableSet *addedBlocks = [NSMutableSet setWithSet:currentBlockSet];
-  [addedBlocks minusSet:intersection];
-  
-  NSLog(@"updating observations. Removing %lu blocks",(unsigned long)[deletedBlocks count]);
+  NSLog(@"MBTDynamicPager: content changed (now %lu blocks). triggering retile",blocksToObserve.count);
 
-  NSIndexSet *indices = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [deletedBlocks count])];
-  [[deletedBlocks allObjects] removeObserver:self fromObjectsAtIndexes:indices forKeyPath:@"view"];
+  NSMutableSet *blocksToIgnore = [NSMutableSet setWithSet:self.observingBlocks];
+  [blocksToIgnore minusSet:blocksToObserve];
 
-  self.viewBindingObservers = currentBlockSet;
+  NSMutableSet *blocksToAdd = [NSMutableSet setWithSet:blocksToObserve];
+  [blocksToAdd minusSet:self.observingBlocks];
 
-  NSLog(@"updateViewObservations build maptable");
-  // build a maptable from the blockControllers to their views. We need to
-  // do this first because calling the view method may cause trigger the
-  // observation.
-  // Also, since we are here, set translatesAutoresizingMaskIntoConstraints
-  // to no since we are handling the view's positioning in the superview
-  // ourselves
-  self.blockViewMap = [NSMapTable weakToWeakObjectsMapTable];
-  for(NSViewController *blockController in self.viewBindingObservers) {
-    NSLog(@"Got fittingsize in update %@",NSStringFromSize([blockController.view fittingSize]));
+  for(NSViewController *blockController in blocksToIgnore) {
+    NSLog(@"Removing observations for blockController %@",blockController);
+    // also remove the view from any TabViewItem
+    [blockController.view removeFromSuperview];
 
-    [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self.blockViewMap setObject:blockController.view forKey:blockController];
+    [blockController removeObserver:self forKeyPath:@"view"];
   }
 
-  NSLog(@"updating observations. Added %lu blocks",[addedBlocks count]);
-  indices = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [addedBlocks count])];
-  [[addedBlocks allObjects] addObserver:self
-                     toObjectsAtIndexes:indices
-                             forKeyPath:@"view"
-                                options:0
-                                context:0];
+  for(NSViewController *blockController in blocksToAdd) {
+    NSLog(@"Adding observations for blockController %@",blockController);
+    [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
+  }
+
+  self.observingBlocks = blocksToObserve;
 }
 
 
@@ -426,33 +576,63 @@ static BOOL userRequestedVisualAids(void)
 //    desired block height. If no delegate is set, or a value less than 1 is
 //    returned, then the default fitting size height is used. In either case, a
 //    height constraint is added to the block.
-- (void)noteLayoutChanged
+
+// In the end, the tabview should have the right number of tabs, the block views
+// should be added as a subview of the correct tabViewItem and the pages array
+// should be correctly filled out.
+ - (void)noteLayoutChanged
 {
+// We do this in two passes. First pass builds the pages dictionary which
+// partitions the blocks into pages---the number based on the size of the
+// blocks. The second pass actually builds the tabview with the appropriate
+// number of TabViewItems and adds each block's view as a subview of the
+// TabViewItem's view.
+
   if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
     NSLog(@"MBTDynamicPager Retiling!");
 
   BOOL previousIsolated = NO;
   CGFloat fittingWidth = 0.0;
   CGFloat availableWidth = 0.0;
-  NSMutableArray *pageBlocks = 0;
   NSMutableArray *blockFittingArray = 0;
   NSMutableDictionary *currentpage = 0;
+
   self.pages = [NSMutableArray array];
 
   NSArray *blockArray = [self currentBlockArray];
 
-  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
+//  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
 
   // partition the blocks into pages
   for(NSViewController *blockController in blockArray) {
-    NSView *block = [blockController view];
-    [block layoutSubtreeIfNeeded];
+    NSView *blockView = [blockController view];
+    assert(blockView);
+
+    [blockView setTranslatesAutoresizingMaskIntoConstraints:NO];
+
     // get the blocks fittingSize
-    NSSize contentSize = [block fittingSize];
+    NSSize contentSize = [blockView fittingSize];
 
     if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
       NSLog(@"MBTDynamicPager got fittingWidth %@ for block: %@",
             NSStringFromSize(contentSize),blockController);
+
+//    NSLog(@"Got autoresizemask\n"
+//          "\tNSViewMinXMargin: %lu\n"
+//          "\tNSViewWidthSizable: %lu\n"
+//          "\tNSViewMaxXMargin: %lu\n"
+//          "\tNSViewMinYMargin: %lu\n"
+//          "\tNSViewHeightSizable: %lu\n"
+//          "\tNSViewMaxYMargin: %lu",
+//          (unsigned long)([blockView autoresizingMask] & NSViewMinXMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewWidthSizable),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMaxXMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMinYMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
+//
+//    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
+
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
 
@@ -494,8 +674,6 @@ static BOOL userRequestedVisualAids(void)
         contentSize.height = self.defaultBlockHeight;
     }
 
-
-
     if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
       NSLog(@"MBTDynamicPager: Calculated block content size: %f %@, %f %@",
             contentSize.width,(needsWidthConstraint?@"(constrained)":@""),
@@ -505,7 +683,14 @@ static BOOL userRequestedVisualAids(void)
             availableWidth,contentSize.width + self.interblockPadding);
     }
 
-    BlockFittingInfo *blockInfo = [[BlockFittingInfo alloc] initWithConstraint:needsWidthConstraint height:needsHeightConstraint andFittingSize:contentSize];
+    BlockFittingInfo *fittingInfo =
+      [[BlockFittingInfo alloc] initWithConstraint:needsWidthConstraint
+                                            height:needsHeightConstraint
+                                       fittingSize:contentSize
+                                   blockController:blockController];
+
+
+
 
     // see if we need to make a new page
     if(isolatedBlock || previousIsolated ||
@@ -526,22 +711,22 @@ static BOOL userRequestedVisualAids(void)
       // todo, what if the contentSize.width is too large for the new width?
       // padding is always calculated before the block, except for the first
       availableWidth = NSWidth(self.tabView.frame) - contentSize.width;
-      pageBlocks = [NSMutableArray arrayWithObject:block];
-      [currentpage setObject:pageBlocks forKey:kPageBlockKey];
-      blockFittingArray = [NSMutableArray arrayWithObject:blockInfo];
-      [currentpage setObject:blockFittingArray forKey:kFittingInfoArrayKey];
+
+      blockFittingArray = [NSMutableArray arrayWithObject:fittingInfo];
+
+      [currentpage setObject:blockFittingArray forKey:kPageBlockFittingInfoArrayKey];
       [currentpage setObject:[NSNumber numberWithBool:(needsWidthConstraint==NO)]
                       forKey:kFlexibleContentKey];
 
       fittingWidth = contentSize.width;
     }
     else {
-      [pageBlocks addObject:block];
+      [blockFittingArray addObject:fittingInfo];
+
       if(needsWidthConstraint==NO)
         [currentpage setObject:@YES forKey:kFlexibleContentKey];
 
       availableWidth -= (contentSize.width+self.interblockPadding);
-      [blockFittingArray addObject:blockInfo];
 
       fittingWidth += (contentSize.width+self.interblockPadding);
 
@@ -560,156 +745,46 @@ static BOOL userRequestedVisualAids(void)
                   forKey:kFittingWidthKey];
 
 
-  //  NSLog(@"Pages %@",self.pages);
+  NSLog(@"Building the tabView");
+  // Now actually build the tabview.
+  //
+  // First make sure the number of tabs matches the number of pages. If we
+  // have too many tabs, then removal of the tabs will release any subviews
+  // than are not part of the current content.
+  while(self.tabView.numberOfTabViewItems < self.pages.count) {
+    [self.tabView addTabViewItem:[[NSTabViewItem alloc] initWithIdentifier:nil]];
+  }
 
-  // actually build the tabview
-  NSMutableArray *tabViewItems = [NSMutableArray arrayWithArray:[self.tabView tabViewItems]];
-  for(NSDictionary *pageDict in self.pages) {
-    // try to get an existing tabview first
-    NSTabViewItem *tabViewItem = 0;
-    if([tabViewItems count]) {
-      tabViewItem = [tabViewItems objectAtIndex:0];
-      [tabViewItems removeObjectAtIndex:0];
-      [[tabViewItem view] removeConstraints:[[tabViewItem view] constraints]];
-    }
-    else {
-      tabViewItem = [[NSTabViewItem alloc] initWithIdentifier:nil];
-      // size wil get set by constraints
+  while(self.tabView.numberOfTabViewItems > self.pages.count) {
+    [self.tabView removeTabViewItem:[self.tabView.tabViewItems lastObject]];
+  }
 
-      [self.tabView addTabViewItem:tabViewItem];
-    }
+  NSArray *tabViewItems = self.tabView.tabViewItems;
+  for(NSUInteger pageIndex=0; pageIndex<self.pages.count; ++pageIndex) {
+    NSDictionary *pageDict = [self.pages objectAtIndex:pageIndex];
+    NSTabViewItem *tabViewItem = [tabViewItems objectAtIndex:pageIndex];
 
-
-    NSView *block = 0;
-    BlockFittingInfo *fittingInfo = 0;
-    BlockFittingInfo *previousFittingInfo = 0;
-    NSView *previousBlock = 0;
-    NSView *previousFittingBlock = 0;
-    pageBlocks = [pageDict objectForKey:kPageBlockKey];
-    blockFittingArray = [pageDict objectForKey:kFittingInfoArrayKey];
-    for(NSUInteger i=0; i<[pageBlocks count]; ++i) {
-      block = [pageBlocks objectAtIndex:i];
-      fittingInfo = [blockFittingArray objectAtIndex:i];
-
-      if([block superview] != [tabViewItem view]) {
-        [block removeFromSuperview];
-        [[tabViewItem view] addSubview:block];
+    NSArray *fittingInfoArray = [pageDict objectForKey:kPageBlockFittingInfoArrayKey];
+    for(BlockFittingInfo *fittingInfo in fittingInfoArray) {
+      if(fittingInfo.blockController.view.superview != tabViewItem.view) {
+        [fittingInfo.blockController.view removeFromSuperview];
+        [tabViewItem.view addSubview:fittingInfo.blockController.view];
       }
 
-      // don't leading pad the first block
-      if(!previousBlock) {
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:block
-                                           attribute:NSLayoutAttributeLeading
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:[tabViewItem view]
-                                           attribute:NSLayoutAttributeLeading
-                                           multiplier:1.0f
-                                           constant:0.0f]];
-      }
-      else {
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:block
-                                           attribute:NSLayoutAttributeLeading
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:previousBlock
-                                           attribute:NSLayoutAttributeTrailing
-                                           multiplier:1.0f
-                                           constant:self.interblockPadding]];
-      }
-
-
-      // top always gets pinned to the top
-      [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                         constraintWithItem:block
-                                         attribute:NSLayoutAttributeTop
-                                         relatedBy:NSLayoutRelationEqual
-                                         toItem:[tabViewItem view]
-                                         attribute:NSLayoutAttributeTop
-                                         multiplier:1.0f
-                                         constant:0.0f]];
-
-      if(fittingInfo.heightConstrained) {
-        //add height constraint
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:block
-                                           attribute:NSLayoutAttributeHeight
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:nil
-                                           attribute:NSLayoutAttributeNotAnAttribute
-                                           multiplier:1.0f
-                                           constant:fittingInfo.fittingSize.height]];
-      }
-      else {
-        // pin to bottom
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:block
-                                           attribute:NSLayoutAttributeBottom
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:[tabViewItem view]
-                                           attribute:NSLayoutAttributeBottom
-                                           multiplier:1.0f
-                                           constant:0.0f]];
-      }
-
-      if(fittingInfo.widthConstrained) {
-        //add width constraint
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:block
-                                           attribute:NSLayoutAttributeWidth
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:nil
-                                           attribute:NSLayoutAttributeNotAnAttribute
-                                           multiplier:1.0f
-                                           constant:fittingInfo.fittingSize.width]];
-
-      }
-      else {
-        if(previousFittingBlock && previousFittingInfo) {
-          // For each page, proportionally constrain each flexible block
-          // compared to its size within the block
-          CGFloat ratio = (previousFittingInfo.fittingSize.width /
-            fittingInfo.fittingSize.width);
-
-          [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                             constraintWithItem:block
-                                             attribute:NSLayoutAttributeWidth
-                                             relatedBy:NSLayoutRelationEqual
-                                             toItem:previousFittingBlock
-                                             attribute:NSLayoutAttributeWidth
-                                             multiplier:1.0f
-                                             constant:ratio]];
-        }
-
-        previousFittingInfo = fittingInfo;
-        previousFittingBlock = block;
-      }
-
-      previousBlock = block;
-    }
-
-    NSNumber *flexibleContent = [pageDict objectForKey:kFlexibleContentKey];
-    assert(flexibleContent);
-    if([flexibleContent boolValue]) {
-      // pin the right size to the tabViewItem
-      [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                         constraintWithItem:previousBlock
-                                         attribute:NSLayoutAttributeTrailing
-                                         relatedBy:NSLayoutRelationEqual
-                                         toItem:[tabViewItem view]
-                                         attribute:NSLayoutAttributeTrailing
-                                         multiplier:1.0f
-                                         constant:0.0f]];
+      NSLog(@"BlockController %@ view has superView %@",fittingInfo.blockController,fittingInfo.blockController.view.superview);
     }
   }
 
-  // remove any remaining tabs
-  [tabViewItems enumerateObjectsUsingBlock:^(NSTabViewItem *item, NSUInteger idx, BOOL *stop) {
-    //    assert([[item.view subviews] count] == 0);
-    [self.tabView removeTabViewItem:item];
-  }];
-  
+//  NSLog(@"Number of tabviews %lu",self.tabView.numberOfTabViewItems);
+  if(self.tabView.numberOfTabViewItems > 0 && ![self.tabView selectedTabViewItem]) {
+//    NSLog(@"selected tabview %@. Selecting the first tab",[self.tabView selectedTabViewItem]);
+
+    [self.tabView selectTabViewItemAtIndex:0];
+//    NSLog(@"selected tabview %@",[self.tabView selectedTabViewItem]);
+  }
+
   // trigger redisplay
+  self.needsUpdateConstraints = YES;
   [self setNeedsDisplay:YES];
 
   if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
@@ -723,13 +798,21 @@ static BOOL userRequestedVisualAids(void)
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)tabView
 {
   assert(tabView == self.tabView);
-  
-  self.numberOfPages = tabView.numberOfTabViewItems;
+
+//  NSLog(@"MBTDynamicPager (NSTabViewDelegate) changed numberOfTabViewItems to %lu",tabView.numberOfTabViewItems);
+//
+  [self willChangeValueForKey:@"numberOfPages"];
+  [self didChangeValueForKey:@"numberOfPages"];
+  //  self.numberOfPages = tabView.numberOfTabViewItems;
 }
 
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
   assert(tabView == self.tabView);
+
+//  NSLog(@"MBTDynamicPager (NSTabViewDelegate) changed tabviewselection to %lu of %lu",
+//        [self.tabView indexOfTabViewItem:[self.tabView selectedTabViewItem]],
+//        [self.tabView numberOfTabViewItems]);
 
   self.currentPage = [tabView indexOfTabViewItem:tabViewItem];
 }

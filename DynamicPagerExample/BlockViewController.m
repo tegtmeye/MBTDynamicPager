@@ -8,17 +8,6 @@
 
 #import "BlockViewController.h"
 
-#import "MBTSimpleView.h"
-
-@interface BlockViewController ()
-
-@property (nonatomic, weak) IBOutlet MBTSimpleView *backgroundView;
-
-- (NSString *)nibNameForViewChoice;
-- (void)replaceViewWithNib:(NSString *)nibName;
-
-@end
-
 @implementation BlockViewController
 
 + (NSColor *)colorCycler
@@ -56,9 +45,40 @@
   return [[NSNumber numberWithUnsignedInteger:index++] stringValue];
 }
 
-+ (NSSet *)keyPathsForValuesAffectingView
+
+-(id)init
 {
-  return [NSSet setWithObjects:@"isolatedBlock", nil];
+  self = [self initWithBlockStyle:simpleStyle viewUsesAutoLayout:NO label:nil color:nil isolated:NO forNibName:kSimpleSpringsAndStrutsNibName];
+  if(self) {
+
+  }
+
+  return self;
+}
+
+-(void)dealloc
+{
+  NSLog(@"Deallocing controller");
+
+}
+
+-(id)initWithBlockStyle:(enum BlockControllerStyle)blockStyle
+         viewUsesAutoLayout:(BOOL)viewUsesAutoLayout
+                  label:(NSString *)label
+                  color:(NSColor *)color
+               isolated:(BOOL)isolated
+             forNibName:(NSString *)nibName
+{
+  self = [super initWithNibName:nibName bundle:Nil];
+  if (self) {
+    _label = (label?label:[BlockViewController labelCounter]);
+    _backgroundColor = (color?color:[BlockViewController colorCycler]);
+    _isolatedBlock = isolated;
+    _blockStyle = blockStyle;
+    _viewUsesAutoLayout = viewUsesAutoLayout;
+  }
+
+  return self;
 }
 
 
@@ -66,73 +86,10 @@
 {
   [super loadView];
 
-  self.label = [BlockViewController labelCounter];
-  self.backgroundColor = [BlockViewController colorCycler];
-
-  // Use normal view replacement machinary to set the initial view
-  [self replaceViewWithNib:[self nibNameForViewChoice]];
-
-  [self.backgroundView bind:@"backgroundColor" toObject:self withKeyPath:@"backgroundColor" options:0];
+  [self.backgroundView bind:@"backgroundColor"
+                   toObject:self
+                withKeyPath:@"backgroundColor"
+                    options:0];
 }
-
-- (void)setIsolatedBlock:(BOOL)isolatedBlock
-{
-  _isolatedBlock = isolatedBlock;
-}
-
-- (NSString *)nibNameForViewChoice
-{
-  static NSString *nibNames[] = {
-    @"MBTSimpleSpringsAndStruts",
-    @"MBTSimpleSpringsAndStrutsResizable",
-    @"MBTSimpleAutoLayout",
-    @"MBTSimpleAutoLayoutResizable",
-    @"MBTComplexSpringsAndStruts",
-    @"MBTComplexSpringsAndStrutsResizable",
-    @"MBTComplexAutoLayout",
-    @"MBTComplexAutoLayoutResizable",
-  };
-
-  int index = (self.blockStyle << 2)|(self.viewUsesAutoLayout << 1)|self.viewIsResizable;
-  assert(index < 8);
-  
-  return nibNames[index];
-}
-
-- (void)setBlockStyle:(enum BlockControllerStyle)blockStyle
-{
-  _blockStyle = blockStyle;
-
-  [self replaceViewWithNib:[self nibNameForViewChoice]];
-}
-
-- (void)setViewUsesAutoLayout:(BOOL)viewUsesAutoLayout
-{
-  _viewUsesAutoLayout = viewUsesAutoLayout;
-  
-  [self replaceViewWithNib:[self nibNameForViewChoice]];
-}
-
-- (void)setViewIsResizable:(BOOL)viewIsResizable
-{
-  _viewIsResizable = viewIsResizable;
-
-  [self replaceViewWithNib:[self nibNameForViewChoice]];
-}
-
-
-- (void)replaceViewWithNib:(NSString *)nibName
-{
-  [self.backgroundView unbind:@"backgroundColor"];
-  
-  // load new nib
-  if(![NSBundle loadNibNamed:nibName owner:self]) {
-    NSLog(@"ERROR! Could not load nib file: %@",nibName);
-    assert(false);
-  }
-  
-  [self.backgroundView bind:@"backgroundColor" toObject:self withKeyPath:@"backgroundColor" options:0];
-}
-
 
 @end
