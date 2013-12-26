@@ -362,14 +362,14 @@ static BOOL userRequestedConsistencyCheck (void)
 
 -(void)updateConstraints
 {
-  NSLog(@">>>>>>>>>>>>>>>MBTDynamicPager updateConstraints start");
+//  NSLog(@">>>>>>>>>>>>>>>MBTDynamicPager updateConstraints start");
 
   assert(self.pages.count == self.tabView.numberOfTabViewItems);
   for(NSInteger pageIndex=0; pageIndex<self.pages.count; ++pageIndex) {
     NSDictionary *pageDict = [self.pages objectAtIndex:pageIndex];
     NSTabViewItem *tabViewItem = [self.tabView.tabViewItems objectAtIndex:pageIndex];
 
-    NSLog(@"Tabview %@ (view %@) has subviews %@",tabViewItem,tabViewItem.view,[tabViewItem.view subviews]);
+//    NSLog(@"Tabview %@ (view %@) has subviews %@",tabViewItem,tabViewItem.view,[tabViewItem.view subviews]);
 
     [tabViewItem.view removeConstraints:[tabViewItem.view constraints]];
 
@@ -390,8 +390,8 @@ static BOOL userRequestedConsistencyCheck (void)
     for(BlockFittingInfo *fittingInfo in blockFittingArray) {
       NSView *blockView = fittingInfo.blockController.view;
 
-      NSLog(@"Block %@ (view %@) has superview %@",fittingInfo.blockController,
-            fittingInfo.blockController.view,blockView.superview);
+//      NSLog(@"Block %@ (view %@) has superview %@",fittingInfo.blockController,
+//            fittingInfo.blockController.view,blockView.superview);
       assert(blockView.superview);
 
       // don't leading pad the first block
@@ -534,7 +534,7 @@ static BOOL userRequestedConsistencyCheck (void)
   NSSet *blocksToObserve = [NSSet setWithArray:[self currentBlockArray]];
 
 
-  NSLog(@"MBTDynamicPager: content changed (now %lu blocks). triggering retile",blocksToObserve.count);
+//  NSLog(@"MBTDynamicPager: content changed (now %lu blocks). triggering retile",blocksToObserve.count);
 
   NSMutableSet *blocksToIgnore = [NSMutableSet setWithSet:self.observingBlocks];
   [blocksToIgnore minusSet:blocksToObserve];
@@ -543,7 +543,7 @@ static BOOL userRequestedConsistencyCheck (void)
   [blocksToAdd minusSet:self.observingBlocks];
 
   for(NSViewController *blockController in blocksToIgnore) {
-    NSLog(@"Removing observations for blockController %@",blockController);
+//    NSLog(@"Removing observations for blockController %@",blockController);
     // also remove the view from any TabViewItem
     [blockController.view removeFromSuperview];
 
@@ -551,7 +551,7 @@ static BOOL userRequestedConsistencyCheck (void)
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-    NSLog(@"Adding observations for blockController %@",blockController);
+//    NSLog(@"Adding observations for blockController %@",blockController);
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }
 
@@ -617,21 +617,21 @@ static BOOL userRequestedConsistencyCheck (void)
       NSLog(@"MBTDynamicPager got fittingWidth %@ for block: %@",
             NSStringFromSize(contentSize),blockController);
 
-//    NSLog(@"Got autoresizemask\n"
-//          "\tNSViewMinXMargin: %lu\n"
-//          "\tNSViewWidthSizable: %lu\n"
-//          "\tNSViewMaxXMargin: %lu\n"
-//          "\tNSViewMinYMargin: %lu\n"
-//          "\tNSViewHeightSizable: %lu\n"
-//          "\tNSViewMaxYMargin: %lu",
-//          (unsigned long)([blockView autoresizingMask] & NSViewMinXMargin),
-//          (unsigned long)([blockView autoresizingMask] & NSViewWidthSizable),
-//          (unsigned long)([blockView autoresizingMask] & NSViewMaxXMargin),
-//          (unsigned long)([blockView autoresizingMask] & NSViewMinYMargin),
-//          (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
-//          (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
-//
-//    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
+    NSLog(@"Got autoresizemask\n"
+          "\tNSViewMinXMargin: %lu\n"
+          "\tNSViewWidthSizable: %lu\n"
+          "\tNSViewMaxXMargin: %lu\n"
+          "\tNSViewMinYMargin: %lu\n"
+          "\tNSViewHeightSizable: %lu\n"
+          "\tNSViewMaxYMargin: %lu",
+          (unsigned long)([blockView autoresizingMask] & NSViewMinXMargin),
+          (unsigned long)([blockView autoresizingMask] & NSViewWidthSizable),
+          (unsigned long)([blockView autoresizingMask] & NSViewMaxXMargin),
+          (unsigned long)([blockView autoresizingMask] & NSViewMinYMargin),
+          (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
+          (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
+
+    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
 
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
@@ -771,7 +771,7 @@ static BOOL userRequestedConsistencyCheck (void)
         [tabViewItem.view addSubview:fittingInfo.blockController.view];
       }
 
-      NSLog(@"BlockController %@ view has superView %@",fittingInfo.blockController,fittingInfo.blockController.view.superview);
+//      NSLog(@"BlockController %@ view has superView %@",fittingInfo.blockController,fittingInfo.blockController.view.superview);
     }
   }
 
