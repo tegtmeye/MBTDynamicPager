@@ -45,10 +45,14 @@
   return [[NSNumber numberWithUnsignedInteger:index++] stringValue];
 }
 
-
--(id)init
+- (id)init
 {
-  self = [self initWithBlockStyle:simpleStyle viewUsesAutoLayout:NO label:nil color:nil isolated:NO forNibName:kSimpleSpringsAndStrutsNibName];
+  return nil;
+}
+
+-(id)initWithNibName:(NSString *)nibName bundle:(NSBundle *)nibBundleOrNil
+{
+  self = [self initWithLabel:[BlockViewController labelCounter] color:[BlockViewController colorCycler] isolated:NO forNibName:nibName];
   if(self) {
 
   }
@@ -62,20 +66,16 @@
 
 }
 
--(id)initWithBlockStyle:(enum BlockControllerStyle)blockStyle
-         viewUsesAutoLayout:(BOOL)viewUsesAutoLayout
-                  label:(NSString *)label
-                  color:(NSColor *)color
-               isolated:(BOOL)isolated
-             forNibName:(NSString *)nibName
+-(id)initWithLabel:(NSString *)label
+             color:(NSColor *)color
+          isolated:(BOOL)isolated
+        forNibName:(NSString *)nibName
 {
   self = [super initWithNibName:nibName bundle:Nil];
   if (self) {
-    _label = (label?label:[BlockViewController labelCounter]);
-    _backgroundColor = (color?color:[BlockViewController colorCycler]);
+    _label = label;
+    _backgroundColor = color;
     _isolatedBlock = isolated;
-    _blockStyle = blockStyle;
-    _viewUsesAutoLayout = viewUsesAutoLayout;
   }
 
   return self;

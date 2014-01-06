@@ -14,7 +14,8 @@
 #define MBTDYNAMICPAGER_DEBUG 0
 #endif
 
-static const NSString *kFittingWidthKey = @"fittingWidth";
+static const NSString *kMinPageWidthKey = @"MinPageWidthKey";
+static const NSString *kMaxPageWidthKey = @"MaxPageWidthKey";
 static const NSString *kIsolatedBlockKey = @"isolatedBlockKey";
 static const NSString *kPageBlockFittingInfoArrayKey = @"PageBlockFittingInfoArrayKey";
 static const NSString *kFlexibleContentKey = @"flexibleContent";
@@ -61,25 +62,22 @@ static BOOL userRequestedConsistencyCheck (void)
 // Simple container object for storing block fitting data in an NSArray
 @interface BlockFittingInfo : NSObject
 
-@property (nonatomic, assign) BOOL widthConstrained;
-@property (nonatomic, assign) BOOL heightConstrained;
-@property (nonatomic, assign) NSSize fittingSize;
+@property (nonatomic, assign) NSSize minContentSize;
+@property (nonatomic, assign) NSSize maxContentSize;
 @property (nonatomic) NSViewController *blockController;
 
 @end
 
 @implementation BlockFittingInfo
 
-- (id)initWithConstraint:(BOOL)width
-                  height:(BOOL)height
-             fittingSize:(NSSize)fittingSize
+- (id)initWithMinContentSize:(NSSize)minContentSize
+              maxContentSize:(NSSize)maxContentSize
          blockController:(NSViewController *)blockController
 {
   self = [super init];
   if (self) {
-    _widthConstrained = width;
-    _heightConstrained = height;
-    _fittingSize = fittingSize;
+    _minContentSize = minContentSize;
+    _maxContentSize = maxContentSize;
     _blockController = blockController;
   }
 
@@ -93,9 +91,6 @@ static BOOL userRequestedConsistencyCheck (void)
 
 
 
-
-
-
 @interface MBTDynamicPager ()
 
 @property (nonatomic, strong) id contentArrayObservableObject;
@@ -103,9 +98,9 @@ static BOOL userRequestedConsistencyCheck (void)
 
 @property (nonatomic, strong) NSTabView *tabView;
 @property (nonatomic, strong) NSMutableArray *pages;
-@property (nonatomic, strong) NSSet *observingBlocks;
+@property (nonatomic, strong) NSMapTable *observingBlockAutolayoutTranslationMap;
 
-@property (nonatomic, assign, readwrite) NSInteger numberOfPages;
+@property (nonatomic, assign) BOOL isChangingTabs;
 
 - (NSArray *)currentBlockArray;
 - (void)updateBlockObservations;
@@ -119,19 +114,23 @@ static BOOL userRequestedConsistencyCheck (void)
 {
   self = [super initWithFrame:frame];
   if (self) {
-    self.interblockPadding = 8.0f;
-    self.defaultBlockWidth = 100.0f;
-    self.defaultBlockHeight = 100.0f;
-    self.blocksDefaultToIsolated = YES;
+    _interblockPadding = 8.0f;
+    _defaultMinBlockWidth = 100.0f;
+    _defaultMaxBlockWidth = -1.0f;
+    _defaultMinBlockHeight = 100.0f;
+    _defaultMaxBlockHeight = -1.0f;
+    _blocksDefaultToIsolated = YES;
     
-    self.tabView = [[NSTabView alloc] initWithFrame:frame];
+    _tabView = [[NSTabView alloc] initWithFrame:frame];
     self.tabView.delegate = self;
     [self.tabView setTabViewType:NSNoTabsLineBorder];
     [self.tabView setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self addSubview:self.tabView];
 
-    self.pages = [NSMutableArray array];
-    self.observingBlocks = [NSSet set];
+    _pages = [NSMutableArray array];
+    _observingBlockAutolayoutTranslationMap = [NSMapTable strongToStrongObjectsMapTable];
+
+    _isChangingTabs = NO;
 
     NSDictionary *viewsDictionary = @{@"view" : self.tabView};
     [self addConstraints:[NSLayoutConstraint
@@ -158,8 +157,16 @@ static BOOL userRequestedConsistencyCheck (void)
                                            forKeyPath:self.contentArrayBindingKeyPath];
   }
 
-  for(NSViewController *blockController in self.observingBlocks) {
-      [blockController removeObserver:self forKeyPath:@"view"];
+  // reset the blockController's view translatesAutoresizingMaskIntoConstraints
+  // and stop observations
+  NSArray *observingBlocks = NSAllMapTableKeys(self.observingBlockAutolayoutTranslationMap);
+  for(NSViewController *blockController in observingBlocks) {
+    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
+
+    [blockController removeObserver:self forKeyPath:@"view"];
+    blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
+
+    [self.observingBlockAutolayoutTranslationMap removeObjectForKey:blockController];
   }
 }
 
@@ -167,10 +174,12 @@ static BOOL userRequestedConsistencyCheck (void)
 {
   if([binding isEqualToString:NSContentArrayBinding]) {
     // reset if we were bound to something else or had content prior
-    if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath)
-      [self unbind:NSContentArrayBinding];
+    if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath) {
+      [self.contentArrayObservableObject removeObserver:self forKeyPath:self.contentArrayBindingKeyPath];
+    }
     else {
-      self.contentArray = nil;
+      // don't trigger duplicitive operations
+      _contentArray = nil;
     }
 
 
@@ -185,18 +194,8 @@ static BOOL userRequestedConsistencyCheck (void)
                                            options:0
                                            context:nil];
 
-
-    NSArray *currentBlockArray = [self currentBlockArray];
-
-    for(NSViewController *blockController in currentBlockArray) {
-      [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-      [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
-    }
-
-    self.observingBlocks = [NSSet setWithArray:currentBlockArray];
-
     NSLog(@"MBTDynamicPager: done binding, triggering noteLayoutChanged");
+    [self updateBlockObservations];
     [self noteLayoutChanged];
   }
   else {
@@ -212,17 +211,12 @@ static BOOL userRequestedConsistencyCheck (void)
       [self.contentArrayObservableObject removeObserver:self forKeyPath:self.contentArrayBindingKeyPath];
     }
 
-    for(NSViewController *blockController in self.observingBlocks) {
-      [blockController removeObserver:self forKeyPath:@"view"];
-    }
-
     self.contentArrayObservableObject = nil;
     self.contentArrayBindingKeyPath = nil;
-    self.observingBlocks = [NSSet set];
 
     NSLog(@"MBTDynamicPager: unbinding. triggering retile");
 
-    // this may cause things to revert back to self.contentArray;
+    [self updateBlockObservations];
     [self noteLayoutChanged];
   }
 }
@@ -240,12 +234,14 @@ static BOOL userRequestedConsistencyCheck (void)
 
 - (void)setCurrentPage:(NSInteger)currentPage
 {
-  assert(currentPage >= 0);
+  assert(currentPage >= 0 && currentPage < self.tabView.numberOfTabViewItems);
   
   NSTabViewItem *selectedItem = [self.tabView selectedTabViewItem];
   
   if(selectedItem != [self.tabView tabViewItemAtIndex:currentPage]) {
+    self.isChangingTabs = YES;
     [self.tabView selectTabViewItemAtIndex:currentPage];
+    self.isChangingTabs = NO;
   }
 }
 
@@ -271,6 +267,47 @@ static BOOL userRequestedConsistencyCheck (void)
 //  NSLog(@"setInterblockPadding to %f, triggering retile",interblockPadding);
   [self noteLayoutChanged];
 }
+
+- (void)setDefaultMinBlockWidth:(CGFloat)defaultMinBlockWidth
+{
+  assert((defaultMinBlockWidth < 0) || (defaultMinBlockWidth < self.defaultMaxBlockWidth));
+
+  _defaultMinBlockWidth = defaultMinBlockWidth;
+
+  [self noteLayoutChanged];
+}
+
+- (void)setDefaultMaxBlockWidth:(CGFloat)defaultMaxBlockWidth
+{
+  assert(self.defaultMinBlockWidth < defaultMaxBlockWidth);
+
+  _defaultMaxBlockWidth = defaultMaxBlockWidth;
+
+  [self noteLayoutChanged];
+}
+
+- (void)setDefaultMinBlockHeight:(CGFloat)defaultMinBlockHeight
+{
+  assert((defaultMinBlockHeight < 0) || (defaultMinBlockHeight < self.defaultMaxBlockHeight));
+
+  _defaultMinBlockHeight = defaultMinBlockHeight;
+
+  [self noteLayoutChanged];
+}
+
+- (void)setDefaultMaxBlockHeight:(CGFloat)defaultMaxBlockHeight
+{
+  assert(self.defaultMinBlockHeight < defaultMaxBlockHeight);
+
+  _defaultMaxBlockHeight = defaultMaxBlockHeight;
+
+  [self noteLayoutChanged];
+}
+
+
+
+
+
 
 - (void)setBlocksDefaultToIsolated:(BOOL)blocksDefaultToIsolated
 {
@@ -300,21 +337,26 @@ static BOOL userRequestedConsistencyCheck (void)
 
   [super setFrame:frameRect];
   
-  CGFloat tabviewframeWidth = NSWidth(self.tabView.frame);
+  // todo prob should have a pad that triggers retile...
+  // todo defer retile if it isn't needed to properly display this tab
+
+  CGFloat tabviewframeWidth = NSWidth(self.tabView.contentRect);
   NSDictionary *previousPage = 0;
-  CGFloat prevPageFittingWidth = 0.0f;
   NSUInteger pageIndex;
   for(pageIndex=0; pageIndex<[self.pages count]; ++pageIndex) {
     NSDictionary *pageDict = [self.pages objectAtIndex:pageIndex];
 
     NSLog(@"PageDict %@",pageDict);
 
+    NSNumber *minPageWidthNumber = [pageDict objectForKey:kMinPageWidthKey];
+    assert(minPageWidthNumber);
+
+    CGFloat minPageWidth = [minPageWidthNumber floatValue];
+
+
     // first check and see if the frame became too small and we need to push
     // a block onto the next page
-    NSNumber *pageFittingWidth = [pageDict objectForKey:kFittingWidthKey];
-    assert(pageFittingWidth);
-    // todo prob should have a pad that triggers retile...
-    if(tabviewframeWidth - [pageFittingWidth floatValue] < 0) {
+    if((tabviewframeWidth - minPageWidth) < 0) {
 //      NSLog(@"MBTDynamicPager. Sufficient additional space. Triggering retile");
       [self performSelectorOnMainThread:@selector(noteLayoutChanged)
                              withObject:nil
@@ -322,39 +364,71 @@ static BOOL userRequestedConsistencyCheck (void)
 //      NSLog(@"MBTDynamicPager setFrame finished");
       return;
     }
-  
+
+    // don't trigger retile on unbounded last blocks
+
+
+
     if(previousPage) {
       NSNumber *previousPageIsolated = [previousPage objectForKey:kIsolatedBlockKey];
       NSNumber *currentPageIsolated = [pageDict objectForKey:kIsolatedBlockKey];
       assert(previousPageIsolated && currentPageIsolated);
 
+      /**
+        Don't try and move blocks forward if:
+          - the previous block was marked as being isolated
+          - this block was marked as being isolated
+          - the previous page's frame width minus minPageWidth is less than the
+            the first blocks minBlockWidth;
+       */
+
+      //      NSNumber *previousPageIsolated = [previousPage objectForKey:kIsolatedBlockKey];
+//      NSNumber *currentPageIsolated = [pageDict objectForKey:kIsolatedBlockKey];
+//      assert(previousPageIsolated && currentPageIsolated);
+
 //      NSLog(@"previousPageIsolated: %@ and currentPageIsolated %@",previousPageIsolated,currentPageIsolated);
       
       if(![previousPageIsolated boolValue] && ![currentPageIsolated boolValue]) {
-        NSArray *blockArray = [pageDict objectForKey:@"blocks"];
-        NSView *firstBlock = [blockArray objectAtIndex:0];
+        NSNumber *previousPageMaxPageWidthNumber = [previousPage objectForKey:kMaxPageWidthKey];
+        assert(previousPageMaxPageWidthNumber);
 
-        NSSize contentSize = [firstBlock fittingSize];
-        CGFloat blockWidth = (contentSize.width > 0 ? contentSize.width : self.defaultBlockWidth);
-      
-//        NSLog(@"blockWidth %f and pageFittingWidth %f",blockWidth,prevPageFittingWidth);
-        
-        CGFloat additionalBlockWidth = (blockWidth + self.interblockPadding);
-        CGFloat availableWidth = (tabviewframeWidth - prevPageFittingWidth);
-        if(additionalBlockWidth < availableWidth) {
-          // just need on to trigger retile
-//          NSLog(@"MBTDynamicPager. Sufficient additional space with previous page. Triggering retile");
+        CGFloat previousPageMaxPageWidth = [previousPageMaxPageWidthNumber floatValue];
+
+        NSArray *blockArray = [pageDict objectForKey:kPageBlockFittingInfoArrayKey];
+        assert(blockArray);
+
+        BlockFittingInfo *firstBlockFittingInfo = [blockArray objectAtIndex:0];
+
+        if((NSWidth(self.tabView.contentRect)-previousPageMaxPageWidth) >= firstBlockFittingInfo.minContentSize.width)
+        {
           [self performSelectorOnMainThread:@selector(noteLayoutChanged)
                                  withObject:nil
                               waitUntilDone:NO];
-//          NSLog(@"MBTDynamicPager setFrame finished");
+          //          NSLog(@"MBTDynamicPager setFrame finished");
           return;
         }
+
+
+//        NSSize contentSize = [firstBlock fittingSize];
+//        CGFloat blockWidth = (contentSize.width > 0 ? contentSize.width : self.defaultBlockWidth);
+//      
+////        NSLog(@"blockWidth %f and pageFittingWidth %f",blockWidth,prevPageFittingWidth);
+//        
+//        CGFloat additionalBlockWidth = (blockWidth + self.interblockPadding);
+//        CGFloat availableWidth = (tabviewframeWidth - prevPageFittingWidth);
+//        if(additionalBlockWidth < availableWidth) {
+//          // just need on to trigger retile
+////          NSLog(@"MBTDynamicPager. Sufficient additional space with previous page. Triggering retile");
+//          [self performSelectorOnMainThread:@selector(noteLayoutChanged)
+//                                 withObject:nil
+//                              waitUntilDone:NO];
+////          NSLog(@"MBTDynamicPager setFrame finished");
+//          return;
+//        }
       }
     }
 
     previousPage = pageDict;
-    prevPageFittingWidth = [pageFittingWidth floatValue];
   }
 
 //  NSLog(@"MBTDynamicPager setFrame (final) finished");
@@ -377,6 +451,7 @@ static BOOL userRequestedConsistencyCheck (void)
     NSView *previousBlock = 0;
     NSView *previousFittingBlock = 0;
     NSArray *blockFittingArray = [pageDict objectForKey:kPageBlockFittingInfoArrayKey];
+    assert(blockFittingArray);
 
     if(MBTDYNAMICPAGER_DEBUG && userRequestedConsistencyCheck()) {
       if([[tabViewItem.view subviews] count] != blockFittingArray.count) {
@@ -427,18 +502,18 @@ static BOOL userRequestedConsistencyCheck (void)
                                          multiplier:1.0f
                                          constant:0.0f]];
 
-      if(fittingInfo.heightConstrained) {
-        //add height constraint
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:blockView
-                                           attribute:NSLayoutAttributeHeight
-                                           relatedBy:NSLayoutRelationEqual
-                                           toItem:nil
-                                           attribute:NSLayoutAttributeNotAnAttribute
-                                           multiplier:1.0f
-                                           constant:fittingInfo.fittingSize.height]];
-      }
-      else {
+//      if(fittingInfo.heightConstrained) {
+//        //add height constraint
+//        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+//                                           constraintWithItem:blockView
+//                                           attribute:NSLayoutAttributeHeight
+//                                           relatedBy:NSLayoutRelationEqual
+//                                           toItem:nil
+//                                           attribute:NSLayoutAttributeNotAnAttribute
+//                                           multiplier:1.0f
+//                                           constant:fittingInfo.fittingSize.height]];
+//      }
+//      else {
         // pin to bottom
         [[tabViewItem view] addConstraint:[NSLayoutConstraint
                                            constraintWithItem:blockView
@@ -448,57 +523,85 @@ static BOOL userRequestedConsistencyCheck (void)
                                            attribute:NSLayoutAttributeBottom
                                            multiplier:1.0f
                                            constant:0.0f]];
-      }
+//      }
 
-      if(fittingInfo.widthConstrained) {
-        //add width constraint
-        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+
+      NSLog(@"Widthconstraints min %f max %f",fittingInfo.minContentSize.width,fittingInfo.maxContentSize.width);
+
+      [[tabViewItem view] addConstraint:[NSLayoutConstraint
                                            constraintWithItem:blockView
                                            attribute:NSLayoutAttributeWidth
-                                           relatedBy:NSLayoutRelationEqual
+                                           relatedBy:NSLayoutRelationGreaterThanOrEqual
                                            toItem:nil
                                            attribute:NSLayoutAttributeNotAnAttribute
                                            multiplier:1.0f
-                                           constant:fittingInfo.fittingSize.width]];
+                                           constant:fittingInfo.minContentSize.width]];
 
-      }
-      else {
-        if(previousFittingBlock && previousFittingInfo) {
-          // For each page, proportionally constrain each flexible block
-          // compared to its size within the block
-          CGFloat ratio = (previousFittingInfo.fittingSize.width /
-                           fittingInfo.fittingSize.width);
+      [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                         constraintWithItem:blockView
+                                         attribute:NSLayoutAttributeWidth
+                                         relatedBy:NSLayoutRelationLessThanOrEqual
+                                         toItem:nil
+                                         attribute:NSLayoutAttributeNotAnAttribute
+                                         multiplier:1.0f
+                                         constant:fittingInfo.maxContentSize.width]];
 
-          [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                             constraintWithItem:blockView
-                                             attribute:NSLayoutAttributeWidth
-                                             relatedBy:NSLayoutRelationEqual
-                                             toItem:previousFittingBlock
-                                             attribute:NSLayoutAttributeWidth
-                                             multiplier:1.0f
-                                             constant:ratio]];
-        }
 
-        previousFittingInfo = fittingInfo;
-        previousFittingBlock = blockView;
-      }
+
+
+
+//      if(fittingInfo.widthConstrained) {
+//        //add width constraint
+//        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+//                                           constraintWithItem:blockView
+//                                           attribute:NSLayoutAttributeWidth
+//                                           relatedBy:NSLayoutRelationEqual
+//                                           toItem:nil
+//                                           attribute:NSLayoutAttributeNotAnAttribute
+//                                           multiplier:1.0f
+//                                           constant:fittingInfo.fittingSize.width]];
+//
+//      }
+//      else {
+//        if(previousFittingBlock && previousFittingInfo) {
+//          // For each page, proportionally constrain each flexible block
+//          // compared to its size within the block
+//          CGFloat ratio = (previousFittingInfo.fittingSize.width /
+//                           fittingInfo.fittingSize.width);
+//
+//          [[tabViewItem view] addConstraint:[NSLayoutConstraint
+//                                             constraintWithItem:blockView
+//                                             attribute:NSLayoutAttributeWidth
+//                                             relatedBy:NSLayoutRelationEqual
+//                                             toItem:previousFittingBlock
+//                                             attribute:NSLayoutAttributeWidth
+//                                             multiplier:1.0f
+//                                             constant:ratio]];
+//        }
+//
+//        previousFittingInfo = fittingInfo;
+//        previousFittingBlock = blockView;
+//      }
 
       previousBlock = blockView;
     }
 
-    NSNumber *flexibleContent = [pageDict objectForKey:kFlexibleContentKey];
-    assert(flexibleContent);
-    if([flexibleContent boolValue]) {
+//    NSNumber *flexibleContent = [pageDict objectForKey:kFlexibleContentKey];
+//    assert(flexibleContent);
+//    if([flexibleContent boolValue]) {
       // pin the right size to the tabViewItem
-      [[tabViewItem view] addConstraint:[NSLayoutConstraint
+    NSLayoutConstraint *endConstraint = [NSLayoutConstraint
                                          constraintWithItem:previousBlock
                                          attribute:NSLayoutAttributeTrailing
                                          relatedBy:NSLayoutRelationEqual
                                          toItem:[tabViewItem view]
                                          attribute:NSLayoutAttributeTrailing
                                          multiplier:1.0f
-                                         constant:0.0f]];
-    }
+                                         constant:0.0f];
+    endConstraint.priority = NSLayoutPriorityDragThatCannotResizeWindow;
+
+    [[tabViewItem view] addConstraint:endConstraint];
+//    }
   }
 
   [super updateConstraints];
@@ -536,44 +639,74 @@ static BOOL userRequestedConsistencyCheck (void)
 
 //  NSLog(@"MBTDynamicPager: content changed (now %lu blocks). triggering retile",blocksToObserve.count);
 
-  NSMutableSet *blocksToIgnore = [NSMutableSet setWithSet:self.observingBlocks];
+  NSSet *currentObservingBlocks = [NSSet setWithArray:NSAllMapTableKeys(self.observingBlockAutolayoutTranslationMap)];
+
+  NSMutableSet *blocksToIgnore = [NSMutableSet setWithSet:currentObservingBlocks];
   [blocksToIgnore minusSet:blocksToObserve];
 
   NSMutableSet *blocksToAdd = [NSMutableSet setWithSet:blocksToObserve];
-  [blocksToAdd minusSet:self.observingBlocks];
+  [blocksToAdd minusSet:currentObservingBlocks];
 
   for(NSViewController *blockController in blocksToIgnore) {
-//    NSLog(@"Removing observations for blockController %@",blockController);
+    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
+    assert(autoLayoutTranslation);
+
+    //    NSLog(@"Removing observations for blockController %@",blockController);
     // also remove the view from any TabViewItem
     [blockController.view removeFromSuperview];
-
+    blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
     [blockController removeObserver:self forKeyPath:@"view"];
+    [self.observingBlockAutolayoutTranslationMap removeObjectForKey:blockController];
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-//    NSLog(@"Adding observations for blockController %@",blockController);
+    NSLog(@"Adding observations for blockController %@ with view %p",blockController,blockController.view);
+    NSNumber *autoLayoutTranslation = [NSNumber numberWithBool:blockController.view.translatesAutoresizingMaskIntoConstraints];
+    [self.observingBlockAutolayoutTranslationMap setObject:autoLayoutTranslation
+                                              forKey:blockController];
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }
-
-  self.observingBlocks = blocksToObserve;
 }
-
-
 
 #pragma mark - pager methods
 
 // Determing the number of pages need to display all of the blocks given the
-// size and constraints of the block
+// size and constraints of the block.
+//
+// If the block's view has translatesAutoresizingMaskIntoConstraints was set to
+// YES when it was added to the dynamicPager's content, then the determination
+// of whether or not the block is resizable is determined by the
+// autoresizingMask constants, otherwise it is determined by the value of
+// fittingwidth. If translatesAutoresizingMaskIntoConstraints was set to YES,
+// it is set to NO as autolayout is used internally. Non-autolayout changes are
+// not recognized after the block is added.
+//
+// If translatesAutoresizingMaskIntoConstraints is set to YES
+//  - If either NSViewWidthSizable or NSViewHeightSizable is not set, then the
+//    respective initial block's view dimension is used and a constraint is
+//    applied.
+//
+//  - If NSViewWidthSizable is set, then the delegate is queried for the
+//    desired block width.  If no delegate is set, or a non-positive value is
+//    returned, then the default fitting size width is used. In either case, a
+//    width constraint is added to the block.
+//
+//  - If NSViewHeightSizable is set, then the delegate is queried for the
+//    desired block height.  If no delegate is set, or a non-positive value is
+//    returned, then the default fitting size height is used. In either case, a
+//    height constraint is added to the block.
+
+// If translatesAutoresizingMaskIntoConstraints is set to NO
 //  - If a block has a non-zero fitting size width, then that number is used as
 //    the necessary block width.
 //
 //  - If the fitting width is zero, then the delegate is queried for the
-//    desired block width. If no delegate is set, or a value less than 1 is
+//    desired block width. If no delegate is set, or a non-positive value is
 //    returned, then the default fitting size width is used. In either case, a
 //    width constraint is added to the block.
 //
 //  - If the fitting height is zero, then the delegate is queried for the
-//    desired block height. If no delegate is set, or a value less than 1 is
+//    desired block height. If no delegate is set, or a non-positive value is
 //    returned, then the default fitting size height is used. In either case, a
 //    height constraint is added to the block.
 
@@ -589,11 +722,11 @@ static BOOL userRequestedConsistencyCheck (void)
 // TabViewItem's view.
 
   if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
-    NSLog(@"MBTDynamicPager Retiling!");
+    NSLog(@"MBTDynamicPager retiling on frame of size %@",NSStringFromSize(self.tabView.contentRect.size));
 
   BOOL previousIsolated = NO;
-  CGFloat fittingWidth = 0.0;
-  CGFloat availableWidth = 0.0;
+  CGFloat minPageWidth = 0.0;
+  CGFloat maxPageWidth = 0.0;
   NSMutableArray *blockFittingArray = 0;
   NSMutableDictionary *currentpage = 0;
 
@@ -605,17 +738,37 @@ static BOOL userRequestedConsistencyCheck (void)
 
   // partition the blocks into pages
   for(NSViewController *blockController in blockArray) {
+    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
+    assert(autoLayoutTranslation);
+
     NSView *blockView = [blockController view];
     assert(blockView);
 
     [blockView setTranslatesAutoresizingMaskIntoConstraints:NO];
 
     // get the blocks fittingSize
-    NSSize contentSize = [blockView fittingSize];
+    // unbounded growth is less than zero when using springs and struts and
+    // non-positive when using autolayout
+    NSSize minContentSize = NSMakeSize(0.0f,0.0f);
+    NSSize maxContentSize = NSMakeSize(-1.0f,-1.0f);
 
-    if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
-      NSLog(@"MBTDynamicPager got fittingWidth %@ for block: %@",
-            NSStringFromSize(contentSize),blockController);
+    if([autoLayoutTranslation boolValue]) {
+      // query the autoresizingMask
+      if(!(blockView.autoresizingMask & NSViewWidthSizable)) {
+        minContentSize.width = blockView.frame.size.width;
+        maxContentSize.width = blockView.frame.size.width;
+      }
+
+      if(!(blockView.autoresizingMask & NSViewHeightSizable)) {
+        minContentSize.height = blockView.frame.size.height;
+        maxContentSize.height = blockView.frame.size.height;
+      }
+    }
+    else {
+      minContentSize = [blockView fittingSize];
+    }
+
+
 
     NSLog(@"Got autoresizemask\n"
           "\tNSViewMinXMargin: %lu\n"
@@ -631,7 +784,7 @@ static BOOL userRequestedConsistencyCheck (void)
           (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
           (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
 
-    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
+//    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
 
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
@@ -641,121 +794,150 @@ static BOOL userRequestedConsistencyCheck (void)
 
     // if nonpositive fitting width, then see if the delegate wants to set one.
     // In either case, flag that we need to add a block size constraint
-    BOOL needsWidthConstraint = NO;
-    if(!(contentSize.width > 0)) {
-      needsWidthConstraint = YES;
-
+    if(minContentSize.width == 0.0f) {
       if(self.delegate &&
-         [self.delegate respondsToSelector:@selector(widthForUnconstrainedBlock:)])
+         [self.delegate respondsToSelector:@selector(minWidthForUnconstrainedBlock:)])
       {
-        contentSize.width = [self.delegate widthForUnconstrainedBlock:blockController];
+        minContentSize.width = [self.delegate minWidthForUnconstrainedBlock:blockController];
+        assert(minContentSize.width > 0);
       }
-
-      // if still zero, use the default.
-      if(!(contentSize.width > 0))
-        contentSize.width = self.defaultBlockWidth;
+      else
+        minContentSize.width = self.defaultMinBlockWidth;
     }
 
-
-    // if nonpositive fitting height, then see if the delegate wants to set one.
-    // In either case, flag that we need to add a block size constraint
-    BOOL needsHeightConstraint = NO;
-    if(!(contentSize.height > 0)) {
-      needsHeightConstraint = YES;
-
+    if(maxContentSize.width <= 0.0f) {
       if(self.delegate &&
-         [self.delegate respondsToSelector:@selector(heightForUnconstrainedBlock:)])
+         [self.delegate respondsToSelector:@selector(maxWidthForUnconstrainedBlock:)])
       {
-        contentSize.height = [self.delegate heightForUnconstrainedBlock:blockController];
+        maxContentSize.width = [self.delegate maxWidthForUnconstrainedBlock:blockController];
       }
-
-      // if still zero, use the default.
-      if(!(contentSize.height > 0))
-        contentSize.height = self.defaultBlockHeight;
+      else
+        maxContentSize.width = self.defaultMaxBlockWidth;
     }
+    assert(maxContentSize.width < 0.0f || maxContentSize.width >= minContentSize.width);
+
+    if(minContentSize.height == 0.0f) {
+      if(self.delegate &&
+         [self.delegate respondsToSelector:@selector(minHeightForUnconstrainedBlock:)])
+      {
+        minContentSize.height = [self.delegate minHeightForUnconstrainedBlock:blockController];
+        assert(minContentSize.height > 0);
+      }
+      else
+        minContentSize.height = self.defaultMinBlockHeight;
+    }
+
+    if(maxContentSize.height <= 0.0f) {
+      if(self.delegate &&
+         [self.delegate respondsToSelector:@selector(maxHeightForUnconstrainedBlock:)])
+      {
+        maxContentSize.height = [self.delegate maxHeightForUnconstrainedBlock:blockController];
+      }
+      else
+        maxContentSize.height = self.defaultMaxBlockHeight;
+    }
+    assert(maxContentSize.height < 0.0f || maxContentSize.height >= minContentSize.height);
+
+
 
     if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
-      NSLog(@"MBTDynamicPager: Calculated block content size: %f %@, %f %@",
-            contentSize.width,(needsWidthConstraint?@"(constrained)":@""),
-            contentSize.height,(needsHeightConstraint?@"(constrained)":@""));
-
-      NSLog(@"MBTDynamicPager: Current page availableWidth %f, needed %f",
-            availableWidth,contentSize.width + self.interblockPadding);
+      NSLog(@"MBTDynamicPager: Calculated block content size: "
+            "minContentSize %@ and maxContentSize %@ for block: %@",
+            NSStringFromSize(minContentSize),NSStringFromSize(maxContentSize),
+            blockController);
     }
 
+    BOOL flexibleContent = (minContentSize.width != maxContentSize.width);
+
     BlockFittingInfo *fittingInfo =
-      [[BlockFittingInfo alloc] initWithConstraint:needsWidthConstraint
-                                            height:needsHeightConstraint
-                                       fittingSize:contentSize
-                                   blockController:blockController];
-
-
+      [[BlockFittingInfo alloc] initWithMinContentSize:minContentSize
+                                        maxContentSize:maxContentSize
+                                       blockController:blockController];
 
 
     // see if we need to make a new page
-    if(isolatedBlock || previousIsolated ||
-       availableWidth < (contentSize.width + self.interblockPadding))
+    if(!currentpage || isolatedBlock || previousIsolated ||
+       (minContentSize.width + self.interblockPadding) > (NSWidth(self.tabView.contentRect)-minPageWidth))
     {
       if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
         NSLog(@"\tMBTDynamicPager: Making a new page with availableWidth %f: ",
-              NSWidth(self.frame));
+              NSWidth(self.tabView.contentRect));
 
       // stash previous fittingWidth if this was not the first page
-      if(currentpage)
-        [currentpage setObject:[NSNumber numberWithFloat:fittingWidth]
-                        forKey:kFittingWidthKey];
+      if(currentpage) {
+        [currentpage setObject:[NSNumber numberWithFloat:minPageWidth]
+                        forKey:kMinPageWidthKey];
+        [currentpage setObject:[NSNumber numberWithFloat:maxPageWidth]
+                        forKey:kMaxPageWidthKey];
+      }
 
       currentpage = [NSMutableDictionary dictionary];
       [self.pages addObject:currentpage];
 
       // todo, what if the contentSize.width is too large for the new width?
       // padding is always calculated before the block, except for the first
-      availableWidth = NSWidth(self.tabView.frame) - contentSize.width;
+
+      /**
+       If the current block has an unbounded maximum width, then this
+       automatically becomes the last block on this page.
+       */
+      minPageWidth = minContentSize.width;
+      maxPageWidth = maxContentSize.width;
 
       blockFittingArray = [NSMutableArray arrayWithObject:fittingInfo];
 
       [currentpage setObject:blockFittingArray forKey:kPageBlockFittingInfoArrayKey];
-      [currentpage setObject:[NSNumber numberWithBool:(needsWidthConstraint==NO)]
+
+      [currentpage setObject:[NSNumber numberWithBool:flexibleContent]
                       forKey:kFlexibleContentKey];
 
-      fittingWidth = contentSize.width;
+      [currentpage setObject:[NSNumber numberWithBool:isolatedBlock]
+                      forKey:kIsolatedBlockKey];
     }
     else {
       [blockFittingArray addObject:fittingInfo];
 
-      if(needsWidthConstraint==NO)
+      if(flexibleContent)
         [currentpage setObject:@YES forKey:kFlexibleContentKey];
 
-      availableWidth -= (contentSize.width+self.interblockPadding);
+      minPageWidth += minContentSize.width + self.interblockPadding;
 
-      fittingWidth += (contentSize.width+self.interblockPadding);
+      if(maxContentSize.width < 0.0f)
+        maxPageWidth = -1.0f;
+      else
+        maxPageWidth += maxContentSize.width + self.interblockPadding;
 
       if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
-        NSLog(@"\tMBTDynamicPager: Added to existing page, availablewidth is now: %f",availableWidth);
+        NSLog(@"MBTDynamicPager: Placing block on current page with availableWidth %f",
+              (NSWidth(self.tabView.contentRect)-minPageWidth));
     }
 
-    [currentpage setObject:[NSNumber numberWithBool:isolatedBlock]
-                    forKey:kIsolatedBlockKey];
+//    [currentpage setObject:[NSNumber numberWithBool:isolatedBlock]
+//                    forKey:kIsolatedBlockKey];
 
     previousIsolated = isolatedBlock;
   }
 
-  // stash the fittingWidth of the final page
-  [currentpage setObject:[NSNumber numberWithFloat:fittingWidth]
-                  forKey:kFittingWidthKey];
+  // stash the minimum and maximum page widths for the last block
+  [currentpage setObject:[NSNumber numberWithFloat:minPageWidth]
+                  forKey:kMinPageWidthKey];
+  [currentpage setObject:[NSNumber numberWithFloat:maxPageWidth]
+                  forKey:kMaxPageWidthKey];
 
 
-  NSLog(@"Building the tabView");
+  NSLog(@"Building the tabView for %lu tabs",(unsigned long)self.pages.count);
   // Now actually build the tabview.
   //
   // First make sure the number of tabs matches the number of pages. If we
   // have too many tabs, then removal of the tabs will release any subviews
   // than are not part of the current content.
   while(self.tabView.numberOfTabViewItems < self.pages.count) {
+    NSLog(@"Adding a new tabviewitem");
     [self.tabView addTabViewItem:[[NSTabViewItem alloc] initWithIdentifier:nil]];
   }
 
   while(self.tabView.numberOfTabViewItems > self.pages.count) {
+    NSLog(@"Getting rid of a unneeded tabviewitem");
     [self.tabView removeTabViewItem:[self.tabView.tabViewItems lastObject]];
   }
 
@@ -800,10 +982,12 @@ static BOOL userRequestedConsistencyCheck (void)
   assert(tabView == self.tabView);
 
 //  NSLog(@"MBTDynamicPager (NSTabViewDelegate) changed numberOfTabViewItems to %lu",tabView.numberOfTabViewItems);
-//
+
   [self willChangeValueForKey:@"numberOfPages"];
   [self didChangeValueForKey:@"numberOfPages"];
-  //  self.numberOfPages = tabView.numberOfTabViewItems;
+
+  if([self.tabView selectedTabViewItem] == nil)
+    [self.tabView selectFirstTabViewItem:self];
 }
 
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
@@ -814,7 +998,10 @@ static BOOL userRequestedConsistencyCheck (void)
 //        [self.tabView indexOfTabViewItem:[self.tabView selectedTabViewItem]],
 //        [self.tabView numberOfTabViewItems]);
 
-  self.currentPage = [tabView indexOfTabViewItem:tabViewItem];
+  if(!self.isChangingTabs) {
+    [self willChangeValueForKey:@"currentPage"];
+    [self didChangeValueForKey:@"currentPage"];
+  }
 }
 
 #pragma mark - debugging support

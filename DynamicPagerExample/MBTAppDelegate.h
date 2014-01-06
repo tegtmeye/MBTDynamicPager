@@ -16,9 +16,13 @@
 @property (weak) IBOutlet MBTDynamicPager *dynamicPager;
 
 @property (weak) IBOutlet NSArrayController *viewArrayController;
+@property (weak) IBOutlet NSArrayController *nibNameArrayController;
 
 @property (weak) IBOutlet NSSegmentedControl *segmentPageControl;
 @property (weak) IBOutlet NSDrawer *drawer;
+@property (weak) IBOutlet NSMatrix *nibMatrix;
+
+@property (nonatomic, assign) NSInteger selectedNibIndex;
 
 // if set, then block isolation is the same as the default value
 // of dynamicPager blocksDefaultToIsolated
@@ -32,8 +36,8 @@
 @property (nonatomic, readonly) BOOL canPageDown;
 @property (nonatomic, readonly) BOOL canPageUp;
 
-- (IBAction)updateViewType:(id)sender;
-- (IBAction)updateLayout:(id)sender;
+- (IBAction)addBlock:(id)sender;
+
 - (IBAction)triggerPagerUpdate:(id)sender;
 
 - (IBAction)previousPage:(id)sender;
@@ -41,5 +45,5 @@
 
 - (IBAction)dumpPage:(id)sender;
 
-
+- (IBAction)drawerDebug:(id)sender;
 @end

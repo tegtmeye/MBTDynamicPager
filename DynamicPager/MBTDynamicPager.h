@@ -13,20 +13,80 @@
 @optional
 
 /**
- *  Return the desired width for the given block. This delegate method is
- *  only called if the width field of '[[blockController view] fittingSize]'
- *  returns zero. If this method also returns zero or is not implemented, then
- *  MBTDynamicPager's 'defaultBlockWidth' is used.
+ Return the minimum desired width for the given block. That is, resizing the
+ dynamicPager to less then this width will cause the block to shift to the next
+ page.
+ 
+ This delegate method is only called if the value of
+ translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
+ OR if it is set to NO AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] width]' is returned. N.B., if
+ using autolayout and this value is less than the fitting width, it is possible
+ that a combination of view constraints and compression priorities will cause
+ this value to be ignored. If not implemented by the delegate, then 
+ MBTDynamicPager's 'defaultMinBlockWidth' is used. 
+ 
+ An assertion will fail if a non-positive value is returned.
  */
-- (CGFloat)widthForUnconstrainedBlock:(NSViewController *)blockController;
+- (CGFloat)minWidthForUnconstrainedBlock:(NSViewController *)blockController;
 
 /**
- *  Return the desired height for the given block. This delegate method is
- *  only called if the height field of '[[blockController view] fittingSize]'
- *  returns zero. If this method also returns zero or is not implemented, then
- *  MBTDynamicPager's 'defaultBlockHeight' is used.
+ Return the maximum desired width for the given block. That is, resizing the
+ dynamicPager to greater then this width will not cause the block to grow
+ further.
+
+ This delegate method is only called if the value of
+ translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
+ OR if it is set to NO AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] width]' is returned. N.B., if
+ using autolayout it is possible that a combination of view constraints and 
+ expansion priorities will cause this value to be ignored. If it is not 
+ implemented by the delegate, then MBTDynamicPager's
+ 'defaultMaxBlockWidth' is used. If a negative value is returned, then the
+ block will grow unbounded. That is, no further blocks will exist on the page.
+
+ An assertion will fail if a non-negative value less than 
+ minWidthForUnconstrainedBlock is returned.
  */
-- (CGFloat)heightForUnconstrainedBlock:(NSViewController *)blockController;
+- (CGFloat)maxWidthForUnconstrainedBlock:(NSViewController *)blockController;
+
+/**
+ Return the minimum desired height for the given block. That is, resizing the
+ dynamicPager to less than this value will cause the block to be to clipped.
+ Conversely, resizing the dynamic pager to greater than this value will cause
+ the block to grow until the value of maxHeightForUnconstrainedBlock.
+ 
+ This delegate method is only called if the value of
+ translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
+ OR if it is set to NO AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] height]' is returned. N.B., if
+ using autolayout and this value is less than the fitting height, it is possible
+ that a combination of view constraints and compression priorities will cause
+ this value to be ignored. If not implemented by the delegate, then
+ MBTDynamicPager's 'defaultMinBlockHeight' is used.
+
+ An assertion will fail if a negative value is returned.
+ */
+- (CGFloat)minHeightForUnconstrainedBlock:(NSViewController *)blockController;
+
+/**
+ Return the maximum desired height for the given block. That is, resizing the
+ dynamicPager to greater then this value will not cause the block to grow
+ further.
+
+ This delegate method is only called if the value of
+ translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
+ OR if it is set to NO AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] height]' is returned. N.B., if
+ using autolayout it is possible that a combination of view constraints and
+ expansion priorities will cause this value to be ignored. If it is not
+ implemented by the delegate, then MBTDynamicPager's
+ 'defaultMaxBlockHeight' is used.
+
+ An assertion will fail if a negative value is returned or if a value less than
+ minHeightForUnconstrainedBlock.
+ */
+- (CGFloat)maxHeightForUnconstrainedBlock:(NSViewController *)blockController;
 
 /**
  *  Return YES if the block should be isolated on its own page. Only called
@@ -84,28 +144,45 @@
 @property (nonatomic, assign) CGFloat interblockPadding;
 
 /**
- *  The width that will be assigned to a block if it does not have a fitting
- *  width and one cannot be determined from the delegate.
- *
- *  The block layout system looks at each block's fittingSize property to
- *  determine how many blocks should appear on a single page. If fittingSize
- *  has a zero parameter, the delegate does not implement or returns a zero
- *  value from widthForUnconstrainedBlock:blockController, or there is no
- *  delegate, then this value is used. The default is 100.
+ The minimum width that will be assigned to a block if it does not have a
+ fitting width and one cannot be determined from the delegate. See the
+ delegate method 'minWidthForUnconstrainedBlock' for more information on how
+ this value is used. The default value is 100.
+ 
+ An assertion will fail if a non-positive value is set.
  */
-@property (nonatomic, assign) CGFloat defaultBlockWidth;
+@property (nonatomic, assign) CGFloat defaultMinBlockWidth;
 
 /**
- *  The height that will be assigned to a block if it does not have a fitting
- *  height and one cannot be determined from the delegate.
- *
- *  The block layout system looks at each block's fittingSize property to
- *  determine how many blocks should appear on a single page. If fittingSize
- *  has a zero parameter, the delegate does not implement or returns a zero
- *  value from heightForUnconstrainedBlock:blockController, or there is no
- *  delegate, then this value is used. The default is 100.
+ The maximum width that will be assigned to a block if it does not have a
+ fitting width and one cannot be determined from the delegate. See the
+ delegate method 'maxWidthForUnconstrainedBlock' for more information on how
+ this value is used. The default value is -1.0f.
+ 
+ An assertion will fail if a non-negative value less than defaultMinBlockWidth
+ is set.
  */
-@property (nonatomic, assign) CGFloat defaultBlockHeight;
+@property (nonatomic, assign) CGFloat defaultMaxBlockWidth;
+
+/**
+ The minimum height that will be assigned to a block if it does not have a
+ fitting height and one cannot be determined from the delegate. See the
+ delegate method 'minHeightForUnconstrainedBlock' for more information on how
+ this value is used. The default value is 100.
+
+ An assertion will fail if a negative value is set.
+ */
+@property (nonatomic, assign) CGFloat defaultMinBlockHeight;
+
+/**
+ The maximum height that will be assigned to a block if it does not have a
+ fitting height and one cannot be determined from the delegate. See the
+ delegate method 'maxHeightForUnconstrainedBlock' for more information on how
+ this value is used. The default value is 100.
+
+ An assertion will fail if a value less than defaultMinBlockHeight is set.
+ */
+@property (nonatomic, assign) CGFloat defaultMaxBlockHeight;
 
 /**
  *  If set, each block will appear on its own page. If a delegate is set and

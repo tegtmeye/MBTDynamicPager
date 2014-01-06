@@ -15,7 +15,7 @@
         <customObject id="-3" userLabel="Application"/>
         <customView id="1" customClass="MBTSimpleView">
             <rect key="frame" x="0.0" y="0.0" width="250" height="150"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <textField verticalHuggingPriority="750" id="2">
                     <rect key="frame" x="15" y="118" width="196" height="17"/>

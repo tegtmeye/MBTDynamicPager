@@ -11,50 +11,6 @@
 #import "BlockViewController.h"
 
 
-BlockViewController * makeBlockController(enum BlockControllerStyle style,
-                                          BOOL viewUsesAutoLayout,
-                                          NSString *label,
-                                          NSColor *backgroundColor,
-                                          BOOL isolated)
-{
-  NSString *styleStr;
-  NSString *layoutStr;
-
-  if(style == simpleStyle)
-    styleStr = @"Simple";
-  else if(style == complexStyle)
-    styleStr = @"Complex";
-  else
-    assert(false);
-
-  if(viewUsesAutoLayout == YES)
-    layoutStr = @"AutoLayout";
-  else
-    layoutStr = @"SpringsAndStruts";
-
-
-  NSString *nibName = [NSString stringWithFormat:@"MBT%@%@",styleStr,layoutStr];
-
-  return [[BlockViewController alloc] initWithBlockStyle:style
-                                      viewUsesAutoLayout:viewUsesAutoLayout
-                                                   label:label
-                                                   color:backgroundColor
-                                                isolated:isolated
-                                              forNibName:nibName];
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @interface MBTAppDelegate ()
 
@@ -94,14 +50,23 @@ BlockViewController * makeBlockController(enum BlockControllerStyle style,
   _useContentBinding = NO;
 
   self.dynamicPager.delegate = self;
-  
-  [self updatePageNavigation];
-  
+
+  [self.nibNameArrayController addObjects:[NSArray arrayWithObjects:
+                                           @"MBTSimpleSpringsAndStruts",
+                                           @"MBTSimpleAutoLayout",
+                                           @"MBTComplexSpringsAndStruts",
+                                           @"MBTComplexAutoLayout",nil]];
+
+  [self.viewArrayController addObserver:self forKeyPath:@"selection" options:0 context:nil];
+  [self.viewArrayController addObserver:self forKeyPath:@"arrangedObjects" options:0 context:nil];
+
   [self.dynamicPager addObserver:self forKeyPath:@"currentPage" options:0 context:nil];
   [self.dynamicPager addObserver:self forKeyPath:@"numberOfPages" options:0 context:nil];
-
-  [self.viewArrayController addObserver:self forKeyPath:@"arrangedObjects" options:0 context:nil];
   self.dynamicPager.contentArray = self.viewArrayController.arrangedObjects;
+
+  [self.segmentPageControl bind:@"selectedIndex" toObject:self.dynamicPager withKeyPath:@"currentPage" options:nil];
+
+  [self addBlock:self];
 
   NSLog(@"applicationDidFinishLaunching COMPLETE");
 }
@@ -122,7 +87,55 @@ BlockViewController * makeBlockController(enum BlockControllerStyle style,
     NSLog(@"Content array changed without binding");
     self.dynamicPager.contentArray = self.viewArrayController.arrangedObjects;
   }
+  else if(object == self.viewArrayController && [keyPath isEqualToString:@"selection"]) {
+    [self willChangeValueForKey:@"selectedNibIndex"];
+    [self didChangeValueForKey:@"selectedNibIndex"];
+    NSLog(@"Selection changed!!!!!!!!!!!");
+  }
 }
+
+- (NSInteger)selectedNibIndex
+{
+  NSInteger result = NSNotFound;
+
+  id selectedView = [self.viewArrayController selection];
+  if(selectedView) {
+    NSArray *arrangedNibNames = self.nibNameArrayController.arrangedObjects;
+    for(NSUInteger i=0; i<arrangedNibNames.count; ++i) {
+      NSString *nibName = [arrangedNibNames objectAtIndex:i];
+      if([nibName isEqualToString:[selectedView valueForKey:@"nibName"]])
+        result = i;
+    }
+  }
+
+  NSLog(@"returning %li for nibName %@",(long)result,[selectedView valueForKey:@"nibName"]);
+  return result;
+}
+
+- (void)setSelectedNibIndex:(NSInteger)selectedNibIndex
+{
+  NSString *nibName = [self.nibNameArrayController.arrangedObjects objectAtIndex:selectedNibIndex];
+  id selection = [self.viewArrayController selection];
+  assert(nibName && selection);
+
+  BlockViewController *oldBlockController = [selection valueForKey:@"self"];
+  NSUInteger oldBlockControllerSelectionIndex = [self.viewArrayController selectionIndex];
+
+  BlockViewController *blockController =
+    [[BlockViewController alloc] initWithLabel:oldBlockController.label
+                                         color:oldBlockController.backgroundColor
+                                      isolated:oldBlockController.isolatedBlock
+                                    forNibName:nibName];
+
+  [self.viewArrayController removeObjectAtArrangedObjectIndex:oldBlockControllerSelectionIndex];
+  [self.viewArrayController insertObject:blockController
+                   atArrangedObjectIndex:oldBlockControllerSelectionIndex];
+}
+
+
+
+
+
 
 - (void)setIgnorePerBlockIsolation:(BOOL)ignorePerBlockIsolation
 {
@@ -150,53 +163,15 @@ BlockViewController * makeBlockController(enum BlockControllerStyle style,
   
 }
 
--(void)updateViewType:(id)sender
+
+- (IBAction)addBlock:(id)sender
 {
-  NSButtonCell *selCell = [sender selectedCell];
-  NSInteger tag = [selCell tag];
+  NSString *firstNibName = [self.nibNameArrayController.arrangedObjects objectAtIndex:0];
+  BlockViewController *blockController = [[BlockViewController alloc] initWithNibName:firstNibName bundle:nil];
 
-  BlockViewController *currentBlockController =
-    [[self.viewArrayController selection] valueForKey:@"self"];
-
-  assert(tag>=0 && tag<2);
-
-  enum BlockControllerStyle style = (enum BlockControllerStyle)tag;
-
-  BlockViewController *blockController =
-    makeBlockController(style,
-                        currentBlockController.viewUsesAutoLayout,
-                        currentBlockController.label,
-                        currentBlockController.backgroundColor,
-                        currentBlockController.isolatedBlock);
-
-  NSUInteger selectedIndex = [self.viewArrayController selectionIndex];
-  [self.viewArrayController removeObjectAtArrangedObjectIndex:selectedIndex];
-  [self.viewArrayController insertObject:blockController atArrangedObjectIndex:selectedIndex];
+  [self.viewArrayController addObject:blockController];
 }
 
--(void)updateLayout:(id)sender
-{
-  NSButtonCell *selCell = [sender selectedCell];
-  NSInteger tag = [selCell tag];
-
-  BlockViewController *currentBlockController =
-    [[self.viewArrayController selection] valueForKey:@"self"];
-
-  assert(tag>=0 && tag<2);
-
-  BOOL usesAutoLayout = tag;
-
-  BlockViewController *blockController =
-  makeBlockController(currentBlockController.blockStyle,
-                      usesAutoLayout,
-                      currentBlockController.label,
-                      currentBlockController.backgroundColor,
-                      currentBlockController.isolatedBlock);
-
-  NSUInteger selectedIndex = [self.viewArrayController selectionIndex];
-  [self.viewArrayController removeObjectAtArrangedObjectIndex:selectedIndex];
-  [self.viewArrayController insertObject:blockController atArrangedObjectIndex:selectedIndex];
-}
 
 -(void)triggerPagerUpdate:(id)sender
 {
@@ -223,12 +198,39 @@ BlockViewController * makeBlockController(enum BlockControllerStyle style,
 //  [self.dynamicPager logBlockFramesForPage:[self.dynamicPager currentPage]];
   [self.window visualizeConstraints:[self.window.contentView constraints]];
 
-  NSViewController *block = [[self.viewArrayController arrangedObjects] objectAtIndex:[self.dynamicPager currentPage]];
+  NSArray *arrangedObjects = [self.viewArrayController arrangedObjects];
+  assert(arrangedObjects);
+
+  NSInteger currentPage = [self.dynamicPager currentPage];
+  assert(currentPage >= 0);
+
+  NSViewController *block = [arrangedObjects objectAtIndex:currentPage];
 
   [self.window visualizeConstraints:[block.view constraints]];
 
   NSLog(@"view constraints: %@",[self.window.contentView constraints]);
 }
+
+
+- (IBAction)drawerDebug:(id)sender
+{
+  id selectedView = [self.viewArrayController selection];
+  assert(selectedView);
+
+
+
+  NSLog(@"nibMatrix %@ with rows %@ and selected %lu (should be %@)",self.nibMatrix,[self.nibMatrix cells],[self.nibMatrix selectedRow],[selectedView valueForKey:@"nibName"]);
+
+}
+
+
+
+
+
+
+
+
+
 
 #pragma mark - MBTDynamicPagerDelegate
 
