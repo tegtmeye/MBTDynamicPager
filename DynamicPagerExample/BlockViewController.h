@@ -22,16 +22,27 @@
 @property (nonatomic, strong) NSString *label;
 @property (nonatomic, strong) NSColor *backgroundColor;
 
+@property (nonatomic, strong) NSNumber *minBlockWidth;
+@property (nonatomic, strong) NSNumber *maxBlockWidth;
+@property (nonatomic, assign) BOOL unboundedWidth;
+
+@property (nonatomic, strong) NSNumber *minBlockHeight;
+@property (nonatomic, strong) NSNumber *maxBlockHeight;
+@property (nonatomic, assign) BOOL unboundedHeight;
+
 @property (nonatomic, assign) BOOL isolatedBlock;
 
--(id)init;
+/**
+ *  Initializer that sets default values
+ */
+-(id)initWithNibName:(NSString *)nibName bundle:(NSBundle *)nibBundleOrNil;
+
 
 /**
- *  Set label and color to nil to have them cycle
+ *  Designated initializer to set parameters
  */
 -(id)initWithLabel:(NSString *)label
              color:(NSColor *)color
-          isolated:(BOOL)isolated
         forNibName:(NSString *)nibName;
 
 @end

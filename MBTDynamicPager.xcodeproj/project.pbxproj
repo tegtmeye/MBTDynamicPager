@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EC0B75CF187B733E00297C67 /* MBTSimpleSpringsAndStrutsResizable.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC0B75CE187B733E00297C67 /* MBTSimpleSpringsAndStrutsResizable.xib */; };
 		EC1CF246175D61C600CFAAB5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC1CF245175D61C600CFAAB5 /* Cocoa.framework */; };
 		EC1CF250175D61C600CFAAB5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EC1CF24E175D61C600CFAAB5 /* InfoPlist.strings */; };
 		EC1CF25C175D63CE00CFAAB5 /* MBTDynamicPager.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1CF25A175D63CE00CFAAB5 /* MBTDynamicPager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -42,6 +43,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		EC0B75CE187B733E00297C67 /* MBTSimpleSpringsAndStrutsResizable.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MBTSimpleSpringsAndStrutsResizable.xib; sourceTree = "<group>"; };
 		EC1CF242175D61C600CFAAB5 /* MBTDynamicPager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MBTDynamicPager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC1CF245175D61C600CFAAB5 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		EC1CF248175D61C600CFAAB5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -159,6 +161,7 @@
 				EC78F76C178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib */,
 				EC78F76A178C061F006C13A1 /* MBTComplexAutoLayout.xib */,
 				EC78F770178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib */,
+				EC0B75CE187B733E00297C67 /* MBTSimpleSpringsAndStrutsResizable.xib */,
 				EC78F76E178C061F006C13A1 /* MBTSimpleAutoLayout.xib */,
 			);
 			name = Views;
@@ -289,6 +292,7 @@
 				EC78F772178C061F006C13A1 /* MBTComplexAutoLayout.xib in Resources */,
 				EC78F774178C061F006C13A1 /* MBTComplexSpringsAndStruts.xib in Resources */,
 				EC78F776178C061F006C13A1 /* MBTSimpleAutoLayout.xib in Resources */,
+				EC0B75CF187B733E00297C67 /* MBTSimpleSpringsAndStrutsResizable.xib in Resources */,
 				ECA3600F184069E400095F92 /* Images.xcassets in Resources */,
 				EC78F778178C061F006C13A1 /* MBTSimpleSpringsAndStruts.xib in Resources */,
 			);

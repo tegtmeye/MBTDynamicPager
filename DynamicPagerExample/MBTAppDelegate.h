@@ -20,6 +20,7 @@
 
 @property (weak) IBOutlet NSSegmentedControl *segmentPageControl;
 @property (weak) IBOutlet NSDrawer *drawer;
+@property (weak) IBOutlet NSBox *box;
 @property (weak) IBOutlet NSMatrix *nibMatrix;
 
 @property (nonatomic, assign) NSInteger selectedNibIndex;

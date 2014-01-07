@@ -53,6 +53,7 @@
 
   [self.nibNameArrayController addObjects:[NSArray arrayWithObjects:
                                            @"MBTSimpleSpringsAndStruts",
+                                           @"MBTSimpleSpringsAndStrutsResizable",
                                            @"MBTSimpleAutoLayout",
                                            @"MBTComplexSpringsAndStruts",
                                            @"MBTComplexAutoLayout",nil]];
@@ -124,8 +125,17 @@
   BlockViewController *blockController =
     [[BlockViewController alloc] initWithLabel:oldBlockController.label
                                          color:oldBlockController.backgroundColor
-                                      isolated:oldBlockController.isolatedBlock
                                     forNibName:nibName];
+
+  blockController.minBlockWidth = oldBlockController.minBlockWidth;
+  blockController.maxBlockWidth = oldBlockController.maxBlockWidth;
+  blockController.unboundedWidth = oldBlockController.unboundedWidth;
+  blockController.minBlockHeight = oldBlockController.minBlockHeight;
+  blockController.maxBlockHeight = oldBlockController.maxBlockHeight;
+  blockController.unboundedHeight = oldBlockController.unboundedHeight;
+  
+  blockController.isolatedBlock = oldBlockController.isolatedBlock;
+
 
   [self.viewArrayController removeObjectAtArrangedObjectIndex:oldBlockControllerSelectionIndex];
   [self.viewArrayController insertObject:blockController
@@ -214,13 +224,7 @@
 
 - (IBAction)drawerDebug:(id)sender
 {
-  id selectedView = [self.viewArrayController selection];
-  assert(selectedView);
-
-
-
-  NSLog(@"nibMatrix %@ with rows %@ and selected %lu (should be %@)",self.nibMatrix,[self.nibMatrix cells],[self.nibMatrix selectedRow],[selectedView valueForKey:@"nibName"]);
-
+  [self.window visualizeConstraints:[self.box constraints]];
 }
 
 
@@ -248,5 +252,67 @@
   return result;
 }
 
+- (CGFloat)minWidthForUnconstrainedBlock:(NSViewController *)blockController
+{
+  CGFloat result = self.dynamicPager.defaultMinBlockWidth;
+  if([blockController respondsToSelector:@selector(minBlockWidth)]) {
+    NSNumber *val = [blockController performSelector:@selector(minBlockWidth)];
+    assert(val && [val isKindOfClass:[NSNumber class]]);
+    result = [val floatValue];
+  }
+
+  return result;
+}
+
+- (CGFloat)maxWidthForUnconstrainedBlock:(NSViewController *)blockController
+{
+  CGFloat result = self.dynamicPager.defaultMaxBlockWidth;
+  if([blockController respondsToSelector:@selector(maxBlockWidth)] &&
+     [blockController respondsToSelector:@selector(unboundedWidth)])
+  {
+    if((BOOL)[blockController performSelector:@selector(unboundedWidth)])
+      result = -1.0f;
+    else {
+      NSNumber *val = [blockController performSelector:@selector(maxBlockWidth)];
+      assert(val && [val isKindOfClass:[NSNumber class]]);
+      result = [val floatValue];
+    }
+  }
+
+  return result;
+}
+
+
+
+
+- (CGFloat)minHeightForUnconstrainedBlock:(NSViewController *)blockController
+{
+  CGFloat result = self.dynamicPager.defaultMinBlockHeight;
+  if([blockController respondsToSelector:@selector(minBlockHeight)]) {
+    NSNumber *val = [blockController performSelector:@selector(minBlockHeight)];
+    assert(val && [val isKindOfClass:[NSNumber class]]);
+    result = [val floatValue];
+  }
+
+  return result;
+}
+
+- (CGFloat)maxHeightForUnconstrainedBlock:(NSViewController *)blockController
+{
+  CGFloat result = self.dynamicPager.defaultMaxBlockHeight;
+  if([blockController respondsToSelector:@selector(maxBlockHeight)] &&
+     [blockController respondsToSelector:@selector(unboundedHeight)])
+  {
+    if((BOOL)[blockController performSelector:@selector(unboundedHeight)])
+      result = -1.0f;
+    else {
+      NSNumber *val = [blockController performSelector:@selector(maxBlockHeight)];
+      assert(val && [val isKindOfClass:[NSNumber class]]);
+      result = [val floatValue];
+    }
+  }
+
+  return result;
+}
 
 @end

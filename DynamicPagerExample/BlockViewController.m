@@ -10,6 +10,9 @@
 
 @implementation BlockViewController
 
+@synthesize maxBlockWidth=_maxBlockWidth;
+@synthesize maxBlockHeight=_maxBlockHeight;
+
 + (NSColor *)colorCycler
 {
   static NSUInteger index = 0;
@@ -52,7 +55,7 @@
 
 -(id)initWithNibName:(NSString *)nibName bundle:(NSBundle *)nibBundleOrNil
 {
-  self = [self initWithLabel:[BlockViewController labelCounter] color:[BlockViewController colorCycler] isolated:NO forNibName:nibName];
+  self = [self initWithLabel:[BlockViewController labelCounter] color:[BlockViewController colorCycler] forNibName:nibName];
   if(self) {
 
   }
@@ -68,14 +71,21 @@
 
 -(id)initWithLabel:(NSString *)label
              color:(NSColor *)color
-          isolated:(BOOL)isolated
         forNibName:(NSString *)nibName
 {
   self = [super initWithNibName:nibName bundle:Nil];
   if (self) {
     _label = label;
     _backgroundColor = color;
-    _isolatedBlock = isolated;
+
+    _minBlockWidth = [NSNumber numberWithFloat:100.0f];
+    _maxBlockWidth = [NSNumber numberWithFloat:100.0f];
+    _unboundedWidth = NO;
+    _minBlockHeight = [NSNumber numberWithFloat:100.0f];
+    _maxBlockHeight = [NSNumber numberWithFloat:100.0f];
+    _unboundedHeight = NO;
+
+    _isolatedBlock = NO;
   }
 
   return self;
@@ -91,5 +101,48 @@
                 withKeyPath:@"backgroundColor"
                     options:0];
 }
+
+- (void)setMinBlockWidth:(NSNumber *)minBlockWidth
+{
+  _minBlockWidth = minBlockWidth;
+
+  // maxBlockWidth getter mods value. use low-level accessor
+  if([minBlockWidth floatValue] > [_maxBlockWidth floatValue]) {
+    self.maxBlockWidth = minBlockWidth;
+  }
+
+  assert(self.minBlockWidth>0);
+}
+
+- (void)setMaxBlockWidth:(NSNumber *)maxBlockWidth
+{
+  _maxBlockWidth = maxBlockWidth;
+
+  if([maxBlockWidth floatValue] < [self.minBlockWidth floatValue]) {
+    self.minBlockWidth = maxBlockWidth;
+  }
+}
+
+- (void)setMinBlockHeight:(NSNumber *)minBlockHeight
+{
+  _minBlockHeight = minBlockHeight;
+
+  // maxBlockHeight getter mods value. use low-level accessor
+  if([minBlockHeight floatValue] > [_maxBlockHeight floatValue]) {
+    self.maxBlockHeight = minBlockHeight;
+  }
+
+  assert(minBlockHeight>0);
+}
+
+- (void)setMaxBlockHeight:(NSNumber *)maxBlockHeight
+{
+  _maxBlockHeight = maxBlockHeight;
+
+  if([maxBlockHeight floatValue] < [self.minBlockHeight floatValue]) {
+    self.minBlockHeight = maxBlockHeight;
+  }
+}
+
 
 @end

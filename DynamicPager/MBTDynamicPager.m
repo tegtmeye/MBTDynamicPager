@@ -469,6 +469,8 @@ static BOOL userRequestedConsistencyCheck (void)
 //            fittingInfo.blockController.view,blockView.superview);
       assert(blockView.superview);
 
+
+      // Take care of widths first
       // don't leading pad the first block
       if(!previousBlock) {
         [[tabViewItem view] addConstraint:[NSLayoutConstraint
@@ -490,6 +492,43 @@ static BOOL userRequestedConsistencyCheck (void)
                                            multiplier:1.0f
                                            constant:self.interblockPadding]];
       }
+
+
+      NSLog(@"Widthconstraints min %f max %f",fittingInfo.minContentSize.width,fittingInfo.maxContentSize.width);
+
+      // We always set a minimum constraint, even if it is zero (which is the
+      // trivial case)
+      [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                         constraintWithItem:blockView
+                                         attribute:NSLayoutAttributeWidth
+                                         relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                         toItem:nil
+                                         attribute:NSLayoutAttributeNotAnAttribute
+                                         multiplier:1.0f
+                                         constant:fittingInfo.minContentSize.width]];
+
+      // if the maximum is non-negative, assign it (negative is unbounded)
+      if(fittingInfo.maxContentSize.width >= 0) {
+        [[tabViewItem view] addConstraint:[NSLayoutConstraint
+                                           constraintWithItem:blockView
+                                           attribute:NSLayoutAttributeWidth
+                                           relatedBy:NSLayoutRelationLessThanOrEqual
+                                           toItem:nil
+                                           attribute:NSLayoutAttributeNotAnAttribute
+                                           multiplier:1.0f
+                                           constant:fittingInfo.maxContentSize.width]];
+      }
+
+
+
+
+
+
+
+
+
+
+
 
 
       // top always gets pinned to the top
@@ -526,25 +565,6 @@ static BOOL userRequestedConsistencyCheck (void)
 //      }
 
 
-      NSLog(@"Widthconstraints min %f max %f",fittingInfo.minContentSize.width,fittingInfo.maxContentSize.width);
-
-      [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                           constraintWithItem:blockView
-                                           attribute:NSLayoutAttributeWidth
-                                           relatedBy:NSLayoutRelationGreaterThanOrEqual
-                                           toItem:nil
-                                           attribute:NSLayoutAttributeNotAnAttribute
-                                           multiplier:1.0f
-                                           constant:fittingInfo.minContentSize.width]];
-
-      [[tabViewItem view] addConstraint:[NSLayoutConstraint
-                                         constraintWithItem:blockView
-                                         attribute:NSLayoutAttributeWidth
-                                         relatedBy:NSLayoutRelationLessThanOrEqual
-                                         toItem:nil
-                                         attribute:NSLayoutAttributeNotAnAttribute
-                                         multiplier:1.0f
-                                         constant:fittingInfo.maxContentSize.width]];
 
 
 
@@ -786,6 +806,13 @@ static BOOL userRequestedConsistencyCheck (void)
 
 //    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
 
+    if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
+      NSLog(@"MBTDynamicPager: Pre-delegate calculated block content size: "
+            "minContentSize %@ and maxContentSize %@ for block: %@",
+            NSStringFromSize(minContentSize),NSStringFromSize(maxContentSize),
+            blockController);
+    }
+
 
     BOOL isolatedBlock = self.blocksDefaultToIsolated;
 
@@ -856,7 +883,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
 
     // see if we need to make a new page
-    if(!currentpage || isolatedBlock || previousIsolated ||
+    if(!currentpage || isolatedBlock || previousIsolated || (maxPageWidth < 0.0f) ||
        (minContentSize.width + self.interblockPadding) > (NSWidth(self.tabView.contentRect)-minPageWidth))
     {
       if(MBTDYNAMICPAGER_DEBUG && userRequestedLog())
