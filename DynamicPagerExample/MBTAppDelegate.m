@@ -85,13 +85,11 @@
   else if(object == self.viewArrayController && [keyPath isEqualToString:@"arrangedObjects"]) {
     assert(self.useContentBinding == NO);
 
-    NSLog(@"Content array changed without binding");
     self.dynamicPager.contentArray = self.viewArrayController.arrangedObjects;
   }
   else if(object == self.viewArrayController && [keyPath isEqualToString:@"selection"]) {
     [self willChangeValueForKey:@"selectedNibIndex"];
     [self didChangeValueForKey:@"selectedNibIndex"];
-    NSLog(@"Selection changed!!!!!!!!!!!");
   }
 }
 
@@ -109,7 +107,6 @@
     }
   }
 
-  NSLog(@"returning %li for nibName %@",(long)result,[selectedView valueForKey:@"nibName"]);
   return result;
 }
 
@@ -136,6 +133,24 @@
   
   blockController.isolatedBlock = oldBlockController.isolatedBlock;
 
+  if(blockController.usesAutoLayout) {
+    [blockController.view layoutSubtreeIfNeeded];
+    NSSize fittingSize = [blockController.view fittingSize];
+
+    blockController.minBlockWidth = [NSNumber numberWithFloat:fittingSize.width];
+
+    if([blockController.maxBlockWidth floatValue] < [blockController.minBlockWidth floatValue]) {
+      blockController.maxBlockWidth = [NSNumber numberWithFloat:fittingSize.width +
+                                       [blockController.maxBlockWidth floatValue]];
+    }
+
+    blockController.minBlockHeight = [NSNumber numberWithFloat:fittingSize.height];
+
+    if([blockController.maxBlockHeight floatValue] < [blockController.minBlockHeight floatValue]) {
+      blockController.maxBlockHeight = [NSNumber numberWithFloat:fittingSize.height +
+                                        [blockController.maxBlockHeight floatValue]];
+    }
+  }
 
   [self.viewArrayController removeObjectAtArrangedObjectIndex:oldBlockControllerSelectionIndex];
   [self.viewArrayController insertObject:blockController
@@ -178,6 +193,26 @@
 {
   NSString *firstNibName = [self.nibNameArrayController.arrangedObjects objectAtIndex:0];
   BlockViewController *blockController = [[BlockViewController alloc] initWithNibName:firstNibName bundle:nil];
+
+  if(blockController.usesAutoLayout) {
+    [blockController.view layoutSubtreeIfNeeded];
+
+    NSSize fittingSize = [blockController.view fittingSize];
+
+    blockController.minBlockWidth = [NSNumber numberWithFloat:fittingSize.width];
+
+    if([blockController.maxBlockWidth floatValue] < [blockController.minBlockWidth floatValue]) {
+      blockController.maxBlockWidth = [NSNumber numberWithFloat:fittingSize.width +
+                                       [blockController.maxBlockWidth floatValue]];
+    }
+
+    blockController.minBlockHeight = [NSNumber numberWithFloat:fittingSize.height];
+
+    if([blockController.maxBlockHeight floatValue] < [blockController.minBlockHeight floatValue]) {
+      blockController.maxBlockHeight = [NSNumber numberWithFloat:fittingSize.height +
+                                        [blockController.maxBlockHeight floatValue]];
+    }
+  }
 
   [self.viewArrayController addObject:blockController];
 }

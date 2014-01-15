@@ -32,6 +32,8 @@
 
 @property (nonatomic, assign) BOOL isolatedBlock;
 
+@property (nonatomic, readonly) BOOL usesAutoLayout;
+
 /**
  *  Initializer that sets default values
  */

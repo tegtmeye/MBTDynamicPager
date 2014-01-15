@@ -100,6 +100,7 @@
                    toObject:self
                 withKeyPath:@"backgroundColor"
                     options:0];
+
 }
 
 - (void)setMinBlockWidth:(NSNumber *)minBlockWidth
@@ -144,5 +145,9 @@
   }
 }
 
+- (BOOL)usesAutoLayout
+{
+  return (self.view.constraints && [self.view.constraints count]);
+}
 
 @end

@@ -17,13 +17,17 @@
  dynamicPager to less then this width will cause the block to shift to the next
  page.
  
- This delegate method is only called if the value of
- translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
- OR if it is set to NO AND a non-positive value is returned from
- '[[[blockController view] fittingSize] width]' is returned. N.B., if
- using autolayout and this value is less than the fitting width, it is possible
- that a combination of view constraints and compression priorities will cause
- this value to be ignored. If not implemented by the delegate, then 
+ This delegate method is only called if springs and struts is detected AND
+ NSViewWidthSizable is set for the block's view 
+ 
+ OR 
+ 
+ autolayout is detected AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] width]' is returned. 
+ 
+ N.B., if using autolayout and this value is less than the fitting width, it is
+ possible that a combination of view constraints and compression priorities will
+ cause this value to be ignored. If not implemented by the delegate, then
  MBTDynamicPager's 'defaultMinBlockWidth' is used. 
  
  An assertion will fail if a non-positive value is returned.
@@ -35,12 +39,16 @@
  dynamicPager to greater then this width will not cause the block to grow
  further.
 
- This delegate method is only called if the value of
- translatesAutoresizingMaskIntoConstraints is set to YES for the block's view
- OR if it is set to NO AND a non-positive value is returned from
- '[[[blockController view] fittingSize] width]' is returned. N.B., if
- using autolayout it is possible that a combination of view constraints and 
- expansion priorities will cause this value to be ignored. If it is not 
+ This delegate method is only called if springs and struts is detected AND
+ NSViewWidthSizable is set for the block's view
+
+ OR
+
+ autolayout is detected AND a non-positive value is returned from
+ '[[[blockController view] fittingSize] width]' is returned. 
+ 
+ N.B., if using autolayout it is possible that a combination of view constraints
+ and expansion priorities will cause this value to be ignored. If it is not
  implemented by the delegate, then MBTDynamicPager's
  'defaultMaxBlockWidth' is used. If a negative value is returned, then the
  block will grow unbounded. That is, no further blocks will exist on the page.

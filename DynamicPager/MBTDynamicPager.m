@@ -99,6 +99,7 @@ static BOOL userRequestedConsistencyCheck (void)
 @property (nonatomic, strong) NSTabView *tabView;
 @property (nonatomic, strong) NSMutableArray *pages;
 @property (nonatomic, strong) NSMapTable *observingBlockAutolayoutTranslationMap;
+@property (nonatomic, strong) NSMapTable *observingBlockUsesAutolayoutMap;
 
 @property (nonatomic, assign) BOOL isChangingTabs;
 
@@ -129,6 +130,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
     _pages = [NSMutableArray array];
     _observingBlockAutolayoutTranslationMap = [NSMapTable strongToStrongObjectsMapTable];
+    _observingBlockUsesAutolayoutMap = [NSMapTable strongToStrongObjectsMapTable];
 
     _isChangingTabs = NO;
 
@@ -447,9 +449,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
     [tabViewItem.view removeConstraints:[tabViewItem.view constraints]];
 
-    BlockFittingInfo *previousFittingInfo = 0;
     NSView *previousBlock = 0;
-    NSView *previousFittingBlock = 0;
     NSArray *blockFittingArray = [pageDict objectForKey:kPageBlockFittingInfoArrayKey];
     assert(blockFittingArray);
 
@@ -676,14 +676,25 @@ static BOOL userRequestedConsistencyCheck (void)
     [blockController.view removeFromSuperview];
     blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
     [blockController removeObserver:self forKeyPath:@"view"];
+
     [self.observingBlockAutolayoutTranslationMap removeObjectForKey:blockController];
+    [self.observingBlockUsesAutolayoutMap removeObjectForKey:blockController];
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-    NSLog(@"Adding observations for blockController %@ with view %p",blockController,blockController.view);
+    NSNumber *usesAutoLayout = [NSNumber numberWithBool:blockController.view.constraints != nil];
+
+    [self.observingBlockUsesAutolayoutMap setObject:usesAutoLayout forKey:blockController];
+
     NSNumber *autoLayoutTranslation = [NSNumber numberWithBool:blockController.view.translatesAutoresizingMaskIntoConstraints];
+
     [self.observingBlockAutolayoutTranslationMap setObject:autoLayoutTranslation
                                               forKey:blockController];
+
+    [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
+
+    NSLog(@"Adding observations for blockController %@ and autoLayoutTranslation %@",blockController,autoLayoutTranslation);
+
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }
 }
@@ -754,17 +765,23 @@ static BOOL userRequestedConsistencyCheck (void)
 
   NSArray *blockArray = [self currentBlockArray];
 
-//  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
+  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
 
   // partition the blocks into pages
   for(NSViewController *blockController in blockArray) {
-    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
-    assert(autoLayoutTranslation);
+    NSLog(@"Laying out block %@",blockController);
 
     NSView *blockView = [blockController view];
     assert(blockView);
 
-    [blockView setTranslatesAutoresizingMaskIntoConstraints:NO];
+    // We only care if the top-level view uses autolayout. Determine this by
+    // checking to see if there are constraints installed on the top-level view
+    NSNumber *usesAutoLayoutNumber = [self.observingBlockUsesAutolayoutMap objectForKey:blockController];
+    assert(usesAutoLayoutNumber);
+    BOOL usesAutoLayout = [usesAutoLayoutNumber boolValue];
+
+    NSLog(@"usesAutoLayout %i",usesAutoLayout);
+
 
     // get the blocks fittingSize
     // unbounded growth is less than zero when using springs and struts and
@@ -772,7 +789,13 @@ static BOOL userRequestedConsistencyCheck (void)
     NSSize minContentSize = NSMakeSize(0.0f,0.0f);
     NSSize maxContentSize = NSMakeSize(-1.0f,-1.0f);
 
-    if([autoLayoutTranslation boolValue]) {
+//    if([autoLayoutTranslation boolValue]) {
+    if(!usesAutoLayout) {
+      if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
+        NSLog(@"MBTDynamicPager: Springs and struts detected for block: %@",
+              blockController);
+      }
+
       // query the autoresizingMask
       if(!(blockView.autoresizingMask & NSViewWidthSizable)) {
         minContentSize.width = blockView.frame.size.width;
@@ -785,24 +808,29 @@ static BOOL userRequestedConsistencyCheck (void)
       }
     }
     else {
+      if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
+        NSLog(@"MBTDynamicPager: Autolayout detected for block: %@",
+              blockController);
+      }
+
       minContentSize = [blockView fittingSize];
     }
 
 
 
-    NSLog(@"Got autoresizemask\n"
-          "\tNSViewMinXMargin: %lu\n"
-          "\tNSViewWidthSizable: %lu\n"
-          "\tNSViewMaxXMargin: %lu\n"
-          "\tNSViewMinYMargin: %lu\n"
-          "\tNSViewHeightSizable: %lu\n"
-          "\tNSViewMaxYMargin: %lu",
-          (unsigned long)([blockView autoresizingMask] & NSViewMinXMargin),
-          (unsigned long)([blockView autoresizingMask] & NSViewWidthSizable),
-          (unsigned long)([blockView autoresizingMask] & NSViewMaxXMargin),
-          (unsigned long)([blockView autoresizingMask] & NSViewMinYMargin),
-          (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
-          (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
+//    NSLog(@"Got autoresizemask\n"
+//          "\tNSViewMinXMargin: %lu\n"
+//          "\tNSViewWidthSizable: %lu\n"
+//          "\tNSViewMaxXMargin: %lu\n"
+//          "\tNSViewMinYMargin: %lu\n"
+//          "\tNSViewHeightSizable: %lu\n"
+//          "\tNSViewMaxYMargin: %lu",
+//          (unsigned long)([blockView autoresizingMask] & NSViewMinXMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewWidthSizable),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMaxXMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMinYMargin),
+//          (unsigned long)([blockView autoresizingMask] & NSViewHeightSizable),
+//          (unsigned long)([blockView autoresizingMask] & NSViewMaxYMargin));
 
 //    NSLog(@"Got intrinsicSize %@",NSStringFromSize([blockView intrinsicContentSize]));
 

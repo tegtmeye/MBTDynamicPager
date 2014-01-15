@@ -978,6 +978,11 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="fSa-IG-ecV"/>
+                                    <binding destination="655" name="enabled" keyPath="selection.usesAutoLayout" id="DyV-pz-gyZ">
+                                        <dictionary key="options">
+                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                        </dictionary>
+                                    </binding>
                                     <binding destination="655" name="value" keyPath="selection.minBlockWidth" id="oYI-iq-ucA"/>
                                 </connections>
                             </textField>
@@ -1019,12 +1024,12 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="nVa-SW-xei"/>
+                                    <binding destination="655" name="value" keyPath="selection.maxBlockWidth" id="cK8-Eh-uza"/>
                                     <binding destination="655" name="enabled" keyPath="selection.unboundedWidth" id="Dfd-ul-tff">
                                         <dictionary key="options">
                                             <string key="NSValueTransformerName">NSNegateBoolean</string>
                                         </dictionary>
                                     </binding>
-                                    <binding destination="655" name="value" keyPath="selection.maxBlockWidth" id="cK8-Eh-uza"/>
                                 </connections>
                             </textField>
                             <button translatesAutoresizingMaskIntoConstraints="NO" id="LKq-XN-ley">
@@ -1059,6 +1064,11 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="QbU-Ve-0CW"/>
+                                    <binding destination="655" name="enabled" keyPath="selection.usesAutoLayout" id="7mt-Gd-Fi8">
+                                        <dictionary key="options">
+                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                        </dictionary>
+                                    </binding>
                                     <binding destination="655" name="value" keyPath="selection.minBlockHeight" id="Ja1-hB-bED"/>
                                 </connections>
                             </textField>
@@ -1100,12 +1110,12 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="2xD-Ps-1TF"/>
+                                    <binding destination="655" name="value" keyPath="selection.maxBlockHeight" id="mHK-RB-gL8"/>
                                     <binding destination="655" name="enabled" keyPath="selection.unboundedHeight" id="eKp-ti-08Z">
                                         <dictionary key="options">
                                             <string key="NSValueTransformerName">NSNegateBoolean</string>
                                         </dictionary>
                                     </binding>
-                                    <binding destination="655" name="value" keyPath="selection.maxBlockHeight" id="mHK-RB-gL8"/>
                                 </connections>
                             </textField>
                             <button translatesAutoresizingMaskIntoConstraints="NO" id="88k-g2-k3L">
