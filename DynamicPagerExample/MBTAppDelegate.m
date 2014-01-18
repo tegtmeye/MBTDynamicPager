@@ -90,6 +90,18 @@
   else if(object == self.viewArrayController && [keyPath isEqualToString:@"selection"]) {
     [self willChangeValueForKey:@"selectedNibIndex"];
     [self didChangeValueForKey:@"selectedNibIndex"];
+
+    [self willChangeValueForKey:@"selectedMinWidthEnabled"];
+    [self didChangeValueForKey:@"selectedMinWidthEnabled"];
+
+    [self willChangeValueForKey:@"selectedMaxWidthEnabled"];
+    [self didChangeValueForKey:@"selectedMaxWidthEnabled"];
+
+    [self willChangeValueForKey:@"selectedMinHeightEnabled"];
+    [self didChangeValueForKey:@"selectedMinHeightEnabled"];
+
+    [self willChangeValueForKey:@"selectedMaxHeightEnabled"];
+    [self didChangeValueForKey:@"selectedMaxHeightEnabled"];
   }
 }
 
@@ -156,11 +168,6 @@
   [self.viewArrayController insertObject:blockController
                    atArrangedObjectIndex:oldBlockControllerSelectionIndex];
 }
-
-
-
-
-
 
 - (void)setIgnorePerBlockIsolation:(BOOL)ignorePerBlockIsolation
 {

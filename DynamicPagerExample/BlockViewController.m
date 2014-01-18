@@ -8,6 +8,20 @@
 
 #import "BlockViewController.h"
 
+@interface BlockViewController ()
+
+@property (nonatomic, assign, readwrite) BOOL usesAutoLayout;
+
+// only needed so UI can provide adjustible widths. autolayout by the controller
+// isn't detected until the view is loaded so the state of the autolayout flag
+// would be out of sync. This is only needed beacuse the example provides
+// lots of adjustability/debugging functionality. Since you would know the type
+// of nib you have in the real world, all this widths/heights/boundeness/autolayout
+// is likely not needed.
+@property (nonatomic, assign) BOOL didLoadView;
+
+@end
+
 @implementation BlockViewController
 
 @synthesize maxBlockWidth=_maxBlockWidth;
@@ -86,6 +100,9 @@
     _unboundedHeight = NO;
 
     _isolatedBlock = NO;
+
+    _usesAutoLayout = NO;
+    _didLoadView = NO;
   }
 
   return self;
@@ -95,6 +112,12 @@
 - (void)loadView
 {
   [super loadView];
+
+  self.usesAutoLayout = (self.view.constraints.count != 0);
+
+  self.didLoadView = YES;
+
+  NSLog(@"Uses autolayout HERE!!!!!!!!!! %i",self.usesAutoLayout);
 
   [self.backgroundView bind:@"backgroundColor"
                    toObject:self
@@ -147,7 +170,10 @@
 
 - (BOOL)usesAutoLayout
 {
-  return (self.view.constraints && [self.view.constraints count]);
+  if(!self.didLoadView)
+     [self loadView];
+
+  return _usesAutoLayout;
 }
 
 @end

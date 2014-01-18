@@ -25,6 +25,13 @@
 
 @property (nonatomic, assign) NSInteger selectedNibIndex;
 
+// glue to enable/disable UI items for ignored UI input
+@property (nonatomic, readonly) BOOL selectedMinWidthEnabled;
+@property (nonatomic, readonly) BOOL selectedMaxWidthEnabled;
+@property (nonatomic, readonly) BOOL selectedMinHeightEnabled;
+@property (nonatomic, readonly) BOOL selectedMaxHeightEnabled;
+
+
 // if set, then block isolation is the same as the default value
 // of dynamicPager blocksDefaultToIsolated
 @property (nonatomic, assign) BOOL ignorePerBlockIsolation;

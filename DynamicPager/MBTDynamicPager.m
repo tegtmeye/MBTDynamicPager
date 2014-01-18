@@ -682,7 +682,8 @@ static BOOL userRequestedConsistencyCheck (void)
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-    NSNumber *usesAutoLayout = [NSNumber numberWithBool:blockController.view.constraints != nil];
+    NSUInteger numConstraints = [blockController.view.constraints count];
+    NSNumber *usesAutoLayout = [NSNumber numberWithBool:(numConstraints != 0)];
 
     [self.observingBlockUsesAutolayoutMap setObject:usesAutoLayout forKey:blockController];
 
@@ -693,7 +694,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
     [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    NSLog(@"Adding observations for blockController %@ and autoLayoutTranslation %@",blockController,autoLayoutTranslation);
+    NSLog(@"Adding observations for blockController %@. Usesautolayout %@ and autoLayoutTranslation %@",blockController,usesAutoLayout,autoLayoutTranslation);
 
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }

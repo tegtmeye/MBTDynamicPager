@@ -978,15 +978,10 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="fSa-IG-ecV"/>
-                                    <binding destination="655" name="enabled" keyPath="selection.usesAutoLayout" id="DyV-pz-gyZ">
-                                        <dictionary key="options">
-                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
-                                        </dictionary>
-                                    </binding>
                                     <binding destination="655" name="value" keyPath="selection.minBlockWidth" id="oYI-iq-ucA"/>
                                 </connections>
                             </textField>
-                            <textField toolTip="A value of -1 indicates an unbounded width." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="042-cZ-NyO">
+                            <textField toolTip="A value of -1 indicates an unbounded width. Value may be ignored depending on view type." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="042-cZ-NyO">
                                 <rect key="frame" x="7" y="68" width="59" height="14"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="minWidth:" id="VLe-sm-EAY">
@@ -995,7 +990,7 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField toolTip="A value of -1 indicates an unbounded width." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8GU-h0-gna">
+                            <textField toolTip="A value of -1 indicates an unbounded width. Value may be ignored depending on view type." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8GU-h0-gna">
                                 <rect key="frame" x="120" y="68" width="62" height="14"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="maxWidth:" id="lla-d5-jR9">
@@ -1025,14 +1020,9 @@
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="nVa-SW-xei"/>
                                     <binding destination="655" name="value" keyPath="selection.maxBlockWidth" id="cK8-Eh-uza"/>
-                                    <binding destination="655" name="enabled" keyPath="selection.unboundedWidth" id="Dfd-ul-tff">
-                                        <dictionary key="options">
-                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
-                                        </dictionary>
-                                    </binding>
                                 </connections>
                             </textField>
-                            <button translatesAutoresizingMaskIntoConstraints="NO" id="LKq-XN-ley">
+                            <button toolTip="Value may be ignored depending on view type." translatesAutoresizingMaskIntoConstraints="NO" id="LKq-XN-ley">
                                 <rect key="frame" x="236" y="66" width="83" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="unbounded" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="38P-6d-JlS">
@@ -1064,15 +1054,10 @@
                                 </textFieldCell>
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="QbU-Ve-0CW"/>
-                                    <binding destination="655" name="enabled" keyPath="selection.usesAutoLayout" id="7mt-Gd-Fi8">
-                                        <dictionary key="options">
-                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
-                                        </dictionary>
-                                    </binding>
                                     <binding destination="655" name="value" keyPath="selection.minBlockHeight" id="Ja1-hB-bED"/>
                                 </connections>
                             </textField>
-                            <textField toolTip="A value of -1 indicates an unbounded width." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zRJ-p4-wbU">
+                            <textField toolTip="A value of -1 indicates an unbounded width.  Value may be ignored depending on view type." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="zRJ-p4-wbU">
                                 <rect key="frame" x="7" y="46" width="63" height="14"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="minHeight:" id="vJv-M0-pe3">
@@ -1081,7 +1066,7 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField toolTip="A value of -1 indicates an unbounded width." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jGc-gS-u0K">
+                            <textField toolTip="A value of -1 indicates an unbounded width.  Value may be ignored depending on view type." horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jGc-gS-u0K">
                                 <rect key="frame" x="124" y="46" width="66" height="14"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="maxHeight:" id="1Ql-dF-ps2">
@@ -1111,14 +1096,9 @@
                                 <connections>
                                     <action selector="triggerPagerUpdate:" target="494" id="2xD-Ps-1TF"/>
                                     <binding destination="655" name="value" keyPath="selection.maxBlockHeight" id="mHK-RB-gL8"/>
-                                    <binding destination="655" name="enabled" keyPath="selection.unboundedHeight" id="eKp-ti-08Z">
-                                        <dictionary key="options">
-                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
-                                        </dictionary>
-                                    </binding>
                                 </connections>
                             </textField>
-                            <button translatesAutoresizingMaskIntoConstraints="NO" id="88k-g2-k3L">
+                            <button toolTip="Value may be ignored depending on view type." translatesAutoresizingMaskIntoConstraints="NO" id="88k-g2-k3L">
                                 <rect key="frame" x="244" y="44" width="83" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="unbounded" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="p3O-2U-dLp">
