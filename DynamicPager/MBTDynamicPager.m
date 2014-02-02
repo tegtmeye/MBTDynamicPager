@@ -36,6 +36,13 @@ static BOOL userRequestedConsistencyCheck (void)
 }
 
 
+
+
+
+
+
+
+
 @interface MyContainerView : NSView
 
 @end
@@ -98,8 +105,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
 @property (nonatomic, strong) NSTabView *tabView;
 @property (nonatomic, strong) NSMutableArray *pages;
-@property (nonatomic, strong) NSMapTable *observingBlockAutolayoutTranslationMap;
-@property (nonatomic, strong) NSMapTable *observingBlockUsesAutolayoutMap;
+@property (nonatomic, strong) NSMapTable *observingBlockAutoresizingMaskTranslationMap;
 
 @property (nonatomic, assign) BOOL isChangingTabs;
 
@@ -110,6 +116,11 @@ static BOOL userRequestedConsistencyCheck (void)
 
 
 @implementation MBTDynamicPager
+
++ (BOOL)requiresConstraintBasedLayout
+{
+  return YES;
+}
 
 - (id)initWithFrame:(NSRect)frame
 {
@@ -129,8 +140,7 @@ static BOOL userRequestedConsistencyCheck (void)
     [self addSubview:self.tabView];
 
     _pages = [NSMutableArray array];
-    _observingBlockAutolayoutTranslationMap = [NSMapTable strongToStrongObjectsMapTable];
-    _observingBlockUsesAutolayoutMap = [NSMapTable strongToStrongObjectsMapTable];
+    _observingBlockAutoresizingMaskTranslationMap = [NSMapTable strongToStrongObjectsMapTable];
 
     _isChangingTabs = NO;
 
@@ -161,14 +171,14 @@ static BOOL userRequestedConsistencyCheck (void)
 
   // reset the blockController's view translatesAutoresizingMaskIntoConstraints
   // and stop observations
-  NSArray *observingBlocks = NSAllMapTableKeys(self.observingBlockAutolayoutTranslationMap);
+  NSArray *observingBlocks = NSAllMapTableKeys(self.observingBlockAutoresizingMaskTranslationMap);
   for(NSViewController *blockController in observingBlocks) {
-    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
+    NSNumber *autoLayoutTranslation = [self.observingBlockAutoresizingMaskTranslationMap objectForKey:blockController];
 
     [blockController removeObserver:self forKeyPath:@"view"];
     blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
 
-    [self.observingBlockAutolayoutTranslationMap removeObjectForKey:blockController];
+    [self.observingBlockAutoresizingMaskTranslationMap removeObjectForKey:blockController];
   }
 }
 
@@ -348,7 +358,7 @@ static BOOL userRequestedConsistencyCheck (void)
   for(pageIndex=0; pageIndex<[self.pages count]; ++pageIndex) {
     NSDictionary *pageDict = [self.pages objectAtIndex:pageIndex];
 
-    NSLog(@"PageDict %@",pageDict);
+//    NSLog(@"PageDict %@",pageDict);
 
     NSNumber *minPageWidthNumber = [pageDict objectForKey:kMinPageWidthKey];
     assert(minPageWidthNumber);
@@ -465,6 +475,8 @@ static BOOL userRequestedConsistencyCheck (void)
     for(BlockFittingInfo *fittingInfo in blockFittingArray) {
       NSView *blockView = fittingInfo.blockController.view;
 
+      NSLog(@"Constraints on %@ (translatedAutoResizeMask: %i) before remove: %@",fittingInfo.blockController,blockView.translatesAutoresizingMaskIntoConstraints,blockView.constraints);
+      
 //      NSLog(@"Block %@ (view %@) has superview %@",fittingInfo.blockController,
 //            fittingInfo.blockController.view,blockView.superview);
       assert(blockView.superview);
@@ -659,7 +671,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
 //  NSLog(@"MBTDynamicPager: content changed (now %lu blocks). triggering retile",blocksToObserve.count);
 
-  NSSet *currentObservingBlocks = [NSSet setWithArray:NSAllMapTableKeys(self.observingBlockAutolayoutTranslationMap)];
+  NSSet *currentObservingBlocks = [NSSet setWithArray:NSAllMapTableKeys(self.observingBlockAutoresizingMaskTranslationMap)];
 
   NSMutableSet *blocksToIgnore = [NSMutableSet setWithSet:currentObservingBlocks];
   [blocksToIgnore minusSet:blocksToObserve];
@@ -668,33 +680,36 @@ static BOOL userRequestedConsistencyCheck (void)
   [blocksToAdd minusSet:currentObservingBlocks];
 
   for(NSViewController *blockController in blocksToIgnore) {
-    NSNumber *autoLayoutTranslation = [self.observingBlockAutolayoutTranslationMap objectForKey:blockController];
+    NSNumber *autoLayoutTranslation = [self.observingBlockAutoresizingMaskTranslationMap objectForKey:blockController];
     assert(autoLayoutTranslation);
 
     //    NSLog(@"Removing observations for blockController %@",blockController);
     // also remove the view from any TabViewItem
     [blockController.view removeFromSuperview];
+
+    NSLog(@"updateBlockObservations: Constraints before set: %@",blockController.view.constraints);
+
     blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
+
+    NSLog(@"updateBlockObservations: Constraints after set: %@",blockController.view.constraints);
+
     [blockController removeObserver:self forKeyPath:@"view"];
 
-    [self.observingBlockAutolayoutTranslationMap removeObjectForKey:blockController];
-    [self.observingBlockUsesAutolayoutMap removeObjectForKey:blockController];
+    [self.observingBlockAutoresizingMaskTranslationMap removeObjectForKey:blockController];
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-    NSUInteger numConstraints = [blockController.view.constraints count];
-    NSNumber *usesAutoLayout = [NSNumber numberWithBool:(numConstraints != 0)];
-
-    [self.observingBlockUsesAutolayoutMap setObject:usesAutoLayout forKey:blockController];
+    NSLog(@"VIEW TRANSLATESAUTORESIZEMASKINTOCONSTRAINTS %i",blockController.view.translatesAutoresizingMaskIntoConstraints);
 
     NSNumber *autoLayoutTranslation = [NSNumber numberWithBool:blockController.view.translatesAutoresizingMaskIntoConstraints];
 
-    [self.observingBlockAutolayoutTranslationMap setObject:autoLayoutTranslation
+    [self.observingBlockAutoresizingMaskTranslationMap setObject:autoLayoutTranslation
                                               forKey:blockController];
 
     [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    NSLog(@"Adding observations for blockController %@. Usesautolayout %@ and autoLayoutTranslation %@",blockController,usesAutoLayout,autoLayoutTranslation);
+    NSLog(@"Adding observations for blockController %@. AutoLayoutTranslation %@ (%i)",blockController,autoLayoutTranslation,
+          blockController.view.translatesAutoresizingMaskIntoConstraints);
 
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }
@@ -775,14 +790,13 @@ static BOOL userRequestedConsistencyCheck (void)
     NSView *blockView = [blockController view];
     assert(blockView);
 
-    // We only care if the top-level view uses autolayout. Determine this by
-    // checking to see if there are constraints installed on the top-level view
-    NSNumber *usesAutoLayoutNumber = [self.observingBlockUsesAutolayoutMap objectForKey:blockController];
-    assert(usesAutoLayoutNumber);
-    BOOL usesAutoLayout = [usesAutoLayoutNumber boolValue];
 
-    NSLog(@"usesAutoLayout %i",usesAutoLayout);
+    // Since we reset the translatesAutoresizingMaskIntoConstraints to no
+    // query the statshed value for the real value.
 
+    NSNumber *usesAutoResizeMaskNumber = [self.observingBlockAutoresizingMaskTranslationMap objectForKey:blockController];
+    assert(usesAutoResizeMaskNumber);
+    BOOL usesAutoResizeMask = [usesAutoResizeMaskNumber boolValue];
 
     // get the blocks fittingSize
     // unbounded growth is less than zero when using springs and struts and
@@ -790,8 +804,7 @@ static BOOL userRequestedConsistencyCheck (void)
     NSSize minContentSize = NSMakeSize(0.0f,0.0f);
     NSSize maxContentSize = NSMakeSize(-1.0f,-1.0f);
 
-//    if([autoLayoutTranslation boolValue]) {
-    if(!usesAutoLayout) {
+    if(usesAutoResizeMask) {
       if(MBTDYNAMICPAGER_DEBUG && userRequestedLog()) {
         NSLog(@"MBTDynamicPager: Springs and struts detected for block: %@",
               blockController);
