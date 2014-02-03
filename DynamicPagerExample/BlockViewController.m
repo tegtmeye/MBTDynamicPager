@@ -79,7 +79,7 @@
 
 -(void)dealloc
 {
-  NSLog(@"Deallocing controller");
+//  NSLog(@"Deallocing controller");
 
 }
 
@@ -117,7 +117,7 @@
 
   self.didLoadView = YES;
 
-  NSLog(@"Uses autolayout HERE!!!!!!!!!! %i",self.usesAutoLayout);
+//  NSLog(@"Uses autolayout HERE!!!!!!!!!! %i",self.usesAutoLayout);
 
   [self.backgroundView bind:@"backgroundColor"
                    toObject:self

@@ -198,15 +198,15 @@ static BOOL userRequestedConsistencyCheck (void)
     self.contentArrayObservableObject = observable;
     self.contentArrayBindingKeyPath = keyPath;
     
-    NSLog(@"MBTDynamicPager: binding and adding self as observer for object %@ and keypath %@",
-          self.contentArrayObservableObject,self.contentArrayBindingKeyPath);
+//    NSLog(@"MBTDynamicPager: binding and adding self as observer for object %@ and keypath %@",
+//          self.contentArrayObservableObject,self.contentArrayBindingKeyPath);
 
     [self.contentArrayObservableObject addObserver:self
                                         forKeyPath:self.contentArrayBindingKeyPath
                                            options:0
                                            context:nil];
 
-    NSLog(@"MBTDynamicPager: done binding, triggering noteLayoutChanged");
+//    NSLog(@"MBTDynamicPager: done binding, triggering noteLayoutChanged");
     [self updateBlockObservations];
     [self noteLayoutChanged];
   }
@@ -218,7 +218,7 @@ static BOOL userRequestedConsistencyCheck (void)
 - (void)unbind:(NSString *)binding
 {
   if([binding isEqualToString:NSContentArrayBinding]) {
-    NSLog(@"MBTDynamicPager: starting unbinding.");
+//    NSLog(@"MBTDynamicPager: starting unbinding.");
     if(self.contentArrayObservableObject && self.contentArrayBindingKeyPath) {
       [self.contentArrayObservableObject removeObserver:self forKeyPath:self.contentArrayBindingKeyPath];
     }
@@ -226,7 +226,7 @@ static BOOL userRequestedConsistencyCheck (void)
     self.contentArrayObservableObject = nil;
     self.contentArrayBindingKeyPath = nil;
 
-    NSLog(@"MBTDynamicPager: unbinding. triggering retile");
+//    NSLog(@"MBTDynamicPager: unbinding. triggering retile");
 
     [self updateBlockObservations];
     [self noteLayoutChanged];
@@ -333,7 +333,7 @@ static BOOL userRequestedConsistencyCheck (void)
 {
   // if we are bound to something, then ignore updates to the contentArray.
   if(!(self.contentArrayObservableObject && self.contentArrayBindingKeyPath)) {
-    NSLog(@"setContentArray. triggering retile");
+//    NSLog(@"setContentArray. triggering retile");
     _contentArray = contentArray;
 
     [self updateBlockObservations];
@@ -475,8 +475,8 @@ static BOOL userRequestedConsistencyCheck (void)
     for(BlockFittingInfo *fittingInfo in blockFittingArray) {
       NSView *blockView = fittingInfo.blockController.view;
 
-      NSLog(@"Constraints on %@ (translatedAutoResizeMask: %i) before remove: %@",fittingInfo.blockController,blockView.translatesAutoresizingMaskIntoConstraints,blockView.constraints);
-      
+//      NSLog(@"Constraints on %@ (translatedAutoResizeMask: %i) before remove: %@",fittingInfo.blockController,blockView.translatesAutoresizingMaskIntoConstraints,blockView.constraints);
+
 //      NSLog(@"Block %@ (view %@) has superview %@",fittingInfo.blockController,
 //            fittingInfo.blockController.view,blockView.superview);
       assert(blockView.superview);
@@ -506,7 +506,7 @@ static BOOL userRequestedConsistencyCheck (void)
       }
 
 
-      NSLog(@"Widthconstraints min %f max %f",fittingInfo.minContentSize.width,fittingInfo.maxContentSize.width);
+//      NSLog(@"Widthconstraints min %f max %f",fittingInfo.minContentSize.width,fittingInfo.maxContentSize.width);
 
       // We always set a minimum constraint, even if it is zero (which is the
       // trivial case)
@@ -638,7 +638,7 @@ static BOOL userRequestedConsistencyCheck (void)
 
   [super updateConstraints];
 
-  NSLog(@"\n\n\n\n");
+//  NSLog(@"\n\n\n\n");
 
 //  NSLog(@"MBTDynamicPager updateConstraints finished");
 }
@@ -687,11 +687,11 @@ static BOOL userRequestedConsistencyCheck (void)
     // also remove the view from any TabViewItem
     [blockController.view removeFromSuperview];
 
-    NSLog(@"updateBlockObservations: Constraints before set: %@",blockController.view.constraints);
+//    NSLog(@"updateBlockObservations: Constraints before set: %@",blockController.view.constraints);
 
     blockController.view.translatesAutoresizingMaskIntoConstraints = [autoLayoutTranslation boolValue];
 
-    NSLog(@"updateBlockObservations: Constraints after set: %@",blockController.view.constraints);
+//    NSLog(@"updateBlockObservations: Constraints after set: %@",blockController.view.constraints);
 
     [blockController removeObserver:self forKeyPath:@"view"];
 
@@ -699,7 +699,7 @@ static BOOL userRequestedConsistencyCheck (void)
   }
 
   for(NSViewController *blockController in blocksToAdd) {
-    NSLog(@"VIEW TRANSLATESAUTORESIZEMASKINTOCONSTRAINTS %i",blockController.view.translatesAutoresizingMaskIntoConstraints);
+//    NSLog(@"VIEW TRANSLATESAUTORESIZEMASKINTOCONSTRAINTS %i",blockController.view.translatesAutoresizingMaskIntoConstraints);
 
     NSNumber *autoLayoutTranslation = [NSNumber numberWithBool:blockController.view.translatesAutoresizingMaskIntoConstraints];
 
@@ -708,8 +708,8 @@ static BOOL userRequestedConsistencyCheck (void)
 
     [blockController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
 
-    NSLog(@"Adding observations for blockController %@. AutoLayoutTranslation %@ (%i)",blockController,autoLayoutTranslation,
-          blockController.view.translatesAutoresizingMaskIntoConstraints);
+//    NSLog(@"Adding observations for blockController %@. AutoLayoutTranslation %@ (%i)",blockController,autoLayoutTranslation,
+//          blockController.view.translatesAutoresizingMaskIntoConstraints);
 
     [blockController addObserver:self forKeyPath:@"view" options:0 context:nil];
   }
@@ -781,11 +781,11 @@ static BOOL userRequestedConsistencyCheck (void)
 
   NSArray *blockArray = [self currentBlockArray];
 
-  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
+//  NSLog(@"MBTDynamicPager laying out space for %lu blocks",[blockArray count]);
 
   // partition the blocks into pages
   for(NSViewController *blockController in blockArray) {
-    NSLog(@"Laying out block %@",blockController);
+//    NSLog(@"Laying out block %@",blockController);
 
     NSView *blockView = [blockController view];
     assert(blockView);
@@ -994,19 +994,19 @@ static BOOL userRequestedConsistencyCheck (void)
                   forKey:kMaxPageWidthKey];
 
 
-  NSLog(@"Building the tabView for %lu tabs",(unsigned long)self.pages.count);
+//  NSLog(@"Building the tabView for %lu tabs",(unsigned long)self.pages.count);
   // Now actually build the tabview.
   //
   // First make sure the number of tabs matches the number of pages. If we
   // have too many tabs, then removal of the tabs will release any subviews
   // than are not part of the current content.
   while(self.tabView.numberOfTabViewItems < self.pages.count) {
-    NSLog(@"Adding a new tabviewitem");
+//    NSLog(@"Adding a new tabviewitem");
     [self.tabView addTabViewItem:[[NSTabViewItem alloc] initWithIdentifier:nil]];
   }
 
   while(self.tabView.numberOfTabViewItems > self.pages.count) {
-    NSLog(@"Getting rid of a unneeded tabviewitem");
+//    NSLog(@"Getting rid of a unneeded tabviewitem");
     [self.tabView removeTabViewItem:[self.tabView.tabViewItems lastObject]];
   }
 
@@ -1083,7 +1083,7 @@ static BOOL userRequestedConsistencyCheck (void)
   NSView *itemView = [currentTabViewItem view];
 
   for(NSView *block in [itemView subviews]) {
-    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
+//    NSLog(@"block %@ frame: %@ constraints: %@",block,NSStringFromRect(block.frame),[block constraints]);
   }
   
 }

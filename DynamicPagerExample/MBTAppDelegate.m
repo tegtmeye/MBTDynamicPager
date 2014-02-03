@@ -69,7 +69,7 @@
 
   [self addBlock:self];
 
-  NSLog(@"applicationDidFinishLaunching COMPLETE");
+//  NSLog(@"applicationDidFinishLaunching COMPLETE");
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -180,14 +180,14 @@
 {
   // turn off
   if(self.useContentBinding && !useContentBinding) {
-    NSLog(@"Turning OFF contentBinding");
+//    NSLog(@"Turning OFF contentBinding");
     [self.dynamicPager unbind:NSContentArrayBinding];
     [self.viewArrayController addObserver:self forKeyPath:@"arrangedObjects" options:0 context:nil];
     self.dynamicPager.contentArray = self.viewArrayController.arrangedObjects;
   }
   // turn on
   else if(!self.useContentBinding && useContentBinding) {
-    NSLog(@"Turning ON contentBinding");
+//    NSLog(@"Turning ON contentBinding");
     [self.viewArrayController removeObserver:self forKeyPath:@"arrangedObjects"];
     [self.dynamicPager bind:NSContentArrayBinding toObject:self.viewArrayController withKeyPath:@"arrangedObjects" options:nil];
   }
@@ -260,7 +260,7 @@
 
   [self.window visualizeConstraints:[block.view constraints]];
 
-  NSLog(@"view constraints: %@",[self.window.contentView constraints]);
+//  NSLog(@"view constraints: %@",[self.window.contentView constraints]);
 }
 
 
